@@ -1,0 +1,22 @@
+{
+  "_comment": "Fast pre-screen tripwires for the oc-code-auditor AI-safety pass. These are NECESSARY-NOT-SUFFICIENT regex heuristics — a hit warrants a finding, but a miss does NOT mean safe (the full audit is LLM-driven per ai-safety-rules.md). The prompt-injection set scans untrusted CONTENT (retrieval/tool/user text) flowing into a prompt; the tool-use set scans CODE that wires up tool calls. Exercised by tests/ai-safety-rules.test.js against tests/fixtures/ai-safety.jsonl.",
+  "version": "1.0.0",
+  "categories": {
+    "prompt-injection": [
+      { "id": "AI-INJ-001", "rule": "instruction-override", "flags": "i", "pattern": "ignore\\s+(all\\s+|any\\s+)?(previous|prior|earlier|above)\\s+(instructions|prompts|messages)" },
+      { "id": "AI-INJ-002", "rule": "system-disregard", "flags": "i", "pattern": "disregard\\s+(the\\s+|all\\s+)?(system|above|previous|prior)\\b" },
+      { "id": "AI-INJ-003", "rule": "persona-jailbreak", "flags": "i", "pattern": "you\\s+are\\s+now\\b|\\bdo\\s+anything\\s+now\\b|\\bDAN\\b|developer\\s+mode" },
+      { "id": "AI-INJ-004", "rule": "prompt-exfiltration", "flags": "i", "pattern": "(reveal|print|repeat|show|output)\\s+(me\\s+)?(your\\s+)?(the\\s+)?(system\\s+)?(prompt|instructions)" },
+      { "id": "AI-INJ-005", "rule": "fake-role-delimiter", "flags": "i", "pattern": "<\\/?(system|assistant|user|tool)>|\\[/?(INST|SYS)\\]" },
+      { "id": "AI-INJ-006", "rule": "injected-instructions-block", "flags": "i", "pattern": "(^|\\n)\\s*#{2,}\\s*(new\\s+)?(instructions|system)|new\\s+instructions\\s*:" },
+      { "id": "AI-INJ-007", "rule": "policy-override", "flags": "i", "pattern": "override\\s+(your\\s+)?(guidelines|rules|policy|policies|safety|restrictions)" }
+    ],
+    "tool-use": [
+      { "id": "AI-TOOL-001", "rule": "dynamic-eval", "flags": "", "pattern": "\\beval\\s*\\(|new\\s+Function\\s*\\(" },
+      { "id": "AI-TOOL-002", "rule": "shell-exec", "flags": "", "pattern": "child_process|\\bexec(Sync)?\\s*\\(|\\bspawn(Sync)?\\s*\\(|os\\.system\\s*\\(|subprocess\\." },
+      { "id": "AI-TOOL-003", "rule": "shell-true", "flags": "", "pattern": "shell\\s*[:=]\\s*(true|True)" },
+      { "id": "AI-TOOL-004", "rule": "unbounded-tool-loop", "flags": "", "pattern": "while\\s*\\(\\s*(true|1)\\s*\\)|while\\s+True\\s*:" },
+      { "id": "AI-TOOL-005", "rule": "destructive-interpolation", "flags": "i", "pattern": "(rm\\s+-rf|drop\\s+table|delete\\s+from|truncate\\s+table)[^\\n]*\\$\\{|(rm\\s+-rf|drop\\s+table|delete\\s+from)[^\\n]*\\+\\s*(args|input|params|user)" }
+    ]
+  }
+}

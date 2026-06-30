@@ -1,0 +1,64 @@
+name: Bug
+description: A skill misbehaves or produces wrong output
+labels: [bug]
+body:
+  - type: dropdown
+    id: skill
+    attributes:
+      label: Which skill?
+      options:
+        - oc-api-dev
+        - oc-app-architect
+        - oc-bug-check
+        - oc-checkpoint-protocol
+        - oc-code-auditor
+        - oc-dash-forge
+        - oc-deploy-ops
+        - oc-git-ops
+        - oc-integrations-engineer
+        - oc-migration-ops
+        - oc-monitoring-ops
+        - oc-orchestrator
+        - oc-release-ops
+        - oc-reverse-spec
+        - oc-scale-ops
+        - oc-security-auditor
+        - oc-stack-forge
+        - oc-ux-engineer
+        - Not sure / multiple
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      placeholder: "I ran `/oc-audit full` and ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Trigger, prompt, and any relevant project context
+    validations:
+      required: false
+  - type: input
+    id: surface
+    attributes:
+      label: Where were you running it?
+      placeholder: "Claude Code 0.x.y / Claude.ai / Claude Desktop"
+    validations:
+      required: false
+  - type: textarea
+    id: extras
+    attributes:
+      label: Anything else?
+      description: Logs, checkpoint JSON, screenshots, links
+    validations:
+      required: false

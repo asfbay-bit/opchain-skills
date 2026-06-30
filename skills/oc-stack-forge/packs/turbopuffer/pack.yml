@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=../_schema.json
+id: turbopuffer
+displayName: Turbopuffer
+kind: vector-db
+status: beta
+since: 1.5.0
+vectorRef: vector.md

@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=../_schema.json
+id: rust
+displayName: Rust
+kind: language
+status: stable
+since: 1.4.0
+testRunner: cargo test
+buildCmd: cargo build
+lintCmd: cargo clippy -- -D warnings
+langRef: language.md

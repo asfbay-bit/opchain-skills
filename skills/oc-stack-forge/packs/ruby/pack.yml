@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=../_schema.json
+id: ruby
+displayName: Ruby
+kind: language
+status: stable
+since: 1.4.0
+testRunner: rspec
+buildCmd: bundle exec rake build
+lintCmd: bundle exec rubocop
+langRef: language.md
