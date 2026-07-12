@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=../_schema.json
+id: dotnet-aspnet
+displayName: ASP.NET Core
+kind: framework
+status: stable
+since: 1.4.0
+language: csharp
+frameworkRef: framework.md
