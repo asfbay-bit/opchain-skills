@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=../_schema.json
+id: phoenix
+displayName: Phoenix
+kind: framework
+status: stable
+since: 1.4.0
+language: elixir
+frameworkRef: framework.md

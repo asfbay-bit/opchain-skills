@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=../_schema.json
+id: php
+displayName: PHP
+kind: language
+status: stable
+since: 1.4.0
+testRunner: phpunit
+buildCmd: composer install --no-dev
+lintCmd: phpcs
+frameworks: [laravel-php]
+langRef: language.md

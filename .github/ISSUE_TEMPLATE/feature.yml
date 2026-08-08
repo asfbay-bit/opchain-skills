@@ -1,0 +1,61 @@
+name: Feature request
+description: Suggest a new skill, a new trigger, or an improvement
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: scope
+    attributes:
+      label: What kind of request?
+      options:
+        - Improve an existing skill
+        - New trigger / sub-command on an existing skill
+        - Brand new skill
+        - Docs / install / onboarding
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: skill
+    attributes:
+      label: Which skill (if applicable)?
+      options:
+        - oc-api-dev
+        - oc-app-architect
+        - oc-bug-check
+        - oc-checkpoint-protocol
+        - oc-code-auditor
+        - oc-dash-forge
+        - oc-deploy-ops
+        - oc-git-ops
+        - oc-integrations-engineer
+        - oc-migration-ops
+        - oc-monitoring-ops
+        - oc-orchestrator
+        - oc-release-ops
+        - oc-reverse-spec
+        - oc-scale-ops
+        - oc-security-auditor
+        - oc-stack-forge
+        - oc-ux-engineer
+        - N/A
+    validations:
+      required: false
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Tell us about the workflow or pain point before proposing a fix.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like the skill to do?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+    validations:
+      required: false

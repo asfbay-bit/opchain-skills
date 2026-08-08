@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=../_schema.json
+id: swift
+displayName: Swift
+kind: language
+status: stable
+since: 1.4.0
+testRunner: swift test
+buildCmd: swift build
+lintCmd: swiftlint
+frameworks: [swiftui]
+langRef: language.md

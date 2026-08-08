@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opchain.dev/schemas/stack-pack/v1.json",
+  "title": "oc-stack-forge pack",
+  "description": "A coverage pack — a language, framework, deploy target, or mobile platform that oc-stack-forge can recommend or scaffold. One pack.yml per directory under skills/oc-stack-forge/packs/. See CONTRIBUTING.md for authoring guide.",
+  "type": "object",
+  "required": ["id", "kind", "status", "since"],
+  "additionalProperties": false,
+
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "minLength": 2,
+      "maxLength": 40,
+      "description": "Stable identifier. Must match the directory name (skills/oc-stack-forge/packs/<id>/pack.yml) and be globally unique across all kinds. Drives the coverage flag id: skills.coverage.<id>.enabled (for kind in {language, framework, mobile})."
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60,
+      "description": "Human-readable label for oc-stack-forge UI and ADR documents. Defaults to id with hyphens replaced by spaces."
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["language", "framework", "deploy-target", "mobile", "vector-db"],
+      "description": "Pack category. Drives required fields, adapter-graph relations, and whether a coverage flag is generated (language|framework|mobile|vector-db yes; deploy-target no). kind=vector-db packs (pgvector, pinecone, …) are leaf nodes selected by oc-rag-forge; they carry no adapter-graph edges."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["stable", "beta", "experimental", "deprecated"],
+      "description": "Maturity. The skills.coverage.<id>.enabled flag's default = (status === 'stable')."
+    },
+    "since": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "opchain release when the pack landed (semver). Surfaced in /changelog groupings and stale-pack detection."
+    },
+
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Pack id of the underlying language. REQUIRED for kind=framework. The adapter graph follows this edge."
+    },
+    "frameworks": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+      "uniqueItems": true,
+      "description": "For kind=language: canonical frameworks built on this language. Each entry must be a real pack id of kind=framework. The adapter graph follows these edges (and validates the reverse direction matches each framework's `language` field)."
+    },
+    "testRunner": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Canonical test runner command name (vitest, pytest, jest, gotestsum, etc.). REQUIRED for kind=language."
+    },
+    "buildCmd": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Canonical build invocation for the pack. Used in oc-stack-forge scaffolds and ADRs."
+    },
+    "lintCmd": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Canonical lint invocation."
+    },
+    "defaultPlatform": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Pack id of the deploy-target oc-stack-forge picks by default for this pack. Must be a member of supportedPlatforms."
+    },
+    "supportedPlatforms": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+      "uniqueItems": true,
+      "description": "Deploy-target pack ids known to work with this pack."
+    },
+
+    "mobilePlatform": {
+      "type": "string",
+      "enum": ["ios", "android", "flutter", "react-native"],
+      "description": "REQUIRED for kind=mobile. The mobile platform the pack targets. iOS + Android are native; Flutter + React Native are cross-platform."
+    },
+
+    "langRef": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_./-]+\\.md$",
+      "description": "Relative path (from pack.yml) to a language reference doc. Soft cap 50KB per ref, hard cap 100KB."
+    },
+    "frameworkRef": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_./-]+\\.md$",
+      "description": "Relative path to a framework reference doc."
+    },
+    "deployRef": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_./-]+\\.md$",
+      "description": "Relative path to a deploy reference doc."
+    },
+    "testRef": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_./-]+\\.md$",
+      "description": "Relative path to a testing reference doc."
+    },
+    "mobileRef": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_./-]+\\.md$",
+      "description": "Relative path to a mobile-platform reference doc."
+    },
+    "vectorRef": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_./-]+\\.md$",
+      "description": "Relative path to a vector-DB reference doc (kind=vector-db). Soft cap 50KB, hard cap 100KB."
+    },
+
+    "deprecated": {
+      "type": "object",
+      "description": "REQUIRED when status=deprecated. Identifies the replacement and when the deprecation took effect.",
+      "required": ["since", "replacement"],
+      "additionalProperties": false,
+      "properties": {
+        "since": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "opchain release in which the pack was deprecated."
+        },
+        "replacement": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "Pack id that replaces this one. Must exist with status != deprecated."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional migration notes shown in oc-stack-forge advisories."
+        }
+      }
+    }
+  },
+
+  "allOf": [
+    {
+      "if":   { "properties": { "kind": { "const": "framework" } }, "required": ["kind"] },
+      "then": { "required": ["language"] }
+    },
+    {
+      "if":   { "properties": { "kind": { "const": "language" } }, "required": ["kind"] },
+      "then": { "required": ["testRunner"] }
+    },
+    {
+      "if":   { "properties": { "kind": { "const": "mobile" } }, "required": ["kind"] },
+      "then": { "required": ["mobilePlatform"] }
+    },
+    {
+      "if":   { "properties": { "status": { "const": "deprecated" } }, "required": ["status"] },
+      "then": { "required": ["deprecated"] }
+    }
+  ]
+}

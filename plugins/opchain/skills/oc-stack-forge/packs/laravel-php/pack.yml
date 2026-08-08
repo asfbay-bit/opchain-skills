@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=../_schema.json
+id: laravel-php
+displayName: Laravel
+kind: framework
+status: stable
+since: 1.4.0
+language: php
+frameworkRef: framework.md

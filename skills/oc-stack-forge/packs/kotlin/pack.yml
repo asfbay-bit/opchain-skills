@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=../_schema.json
+id: kotlin
+displayName: Kotlin
+kind: language
+status: stable
+since: 1.4.0
+testRunner: gradle test
+buildCmd: gradle build
+lintCmd: ktlint
+frameworks: [spring-kotlin]
+langRef: language.md
