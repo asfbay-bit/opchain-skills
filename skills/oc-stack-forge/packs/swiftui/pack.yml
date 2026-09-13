@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=../_schema.json
+id: swiftui
+displayName: SwiftUI
+kind: framework
+status: stable
+since: 1.4.0
+language: swift
+frameworkRef: framework.md

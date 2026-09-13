@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=../_schema.json
+id: typescript
+displayName: TypeScript
+kind: language
+status: stable
+since: 1.4.0
+testRunner: vitest
+buildCmd: npm run build
+lintCmd: eslint .
+frameworks: [remix, sveltekit, solid]
+langRef: language.md

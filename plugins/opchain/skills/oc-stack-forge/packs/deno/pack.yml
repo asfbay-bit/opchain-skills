@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=../_schema.json
+id: deno
+displayName: Deno
+kind: language
+status: stable
+since: 1.4.0
+testRunner: deno test
+buildCmd: deno task build
+lintCmd: deno lint
+langRef: language.md

@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=../_schema.json
+id: csharp
+displayName: C#
+kind: language
+status: stable
+since: 1.4.0
+testRunner: dotnet test
+buildCmd: dotnet build
+lintCmd: dotnet format --verify-no-changes
+frameworks: [dotnet-aspnet]
+langRef: language.md
