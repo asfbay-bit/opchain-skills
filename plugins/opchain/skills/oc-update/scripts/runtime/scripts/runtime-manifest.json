@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "runtimeContract": "2.0-preview.2",
+  "entrypoint": "scripts/opchain.mjs",
+  "nodeMinimum": "22.13.0",
+  "owners": [
+    "oc-update",
+    "oc-checkpoint-protocol",
+    "oc-telemetry-ops",
+    "oc-hindsight",
+    "oc-evolve"
+  ],
+  "commands": [
+    "capabilities",
+    "update",
+    "recover",
+    "checkpoint",
+    "telemetry",
+    "learning",
+    "context",
+    "evaluation"
+  ],
+  "files": [
+    "package.json",
+    "scripts/opchain.mjs",
+    "scripts/runtime-manifest.json",
+    "scripts/update-opchain.mjs",
+    "scripts/checkpoint.mjs",
+    "scripts/telemetry.mjs",
+    "scripts/runtime/core.mjs",
+    "scripts/runtime/project.mjs",
+    "scripts/runtime/learning.mjs",
+    "scripts/runtime/scorecard.mjs",
+    "scripts/runtime/hindsight.mjs",
+    "scripts/runtime/evolve.mjs",
+    "scripts/runtime/README.md",
+    "scripts/lib/telemetry-aggregate.mjs",
+    "src/lib/mcp/local-checkpoint-store.js",
+    "src/lib/mcp/checkpoint-store.js",
+    "scripts/runtime/evaluation.mjs",
+    "scripts/runtime/prompt-engine.mjs",
+    "scripts/runtime/catalog.json",
+    "scripts/runtime/licenses/zod.txt",
+    "scripts/runtime/licenses/js-yaml.txt"
+  ],
+  "hosts": {
+    "cli": {
+      "manualCommands": true,
+      "automaticHooks": false
+    },
+    "claudeRepoSkills": {
+      "manualCommands": true,
+      "automaticHooks": false
+    },
+    "codexRepoSkills": {
+      "manualCommands": true,
+      "automaticHooks": false
+    },
+    "claudePlugin": {
+      "manualCommands": true,
+      "automaticLearningHooks": false
+    }
+  },
+  "approval": "Externally managed reviewer keys and independently controlled signer required; local CLI cannot prove human presence.",
+  "evaluation": "Explicit provider task runs capture instructions, outputs and grades. External reviewers establish authenticity; synthetic runs never authorize adoption.",
+  "layout": "repository"
+}

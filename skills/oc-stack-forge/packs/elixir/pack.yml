@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=../_schema.json
+id: elixir
+displayName: Elixir
+kind: language
+status: stable
+since: 1.4.0
+testRunner: mix test
+buildCmd: mix compile
+lintCmd: mix credo --strict
+frameworks: [phoenix]
+langRef: language.md
