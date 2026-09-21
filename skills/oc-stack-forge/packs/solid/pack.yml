@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=../_schema.json
+id: solid
+displayName: SolidStart
+kind: framework
+status: stable
+since: 1.4.0
+language: typescript
+frameworkRef: framework.md

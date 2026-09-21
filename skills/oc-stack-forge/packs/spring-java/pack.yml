@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=../_schema.json
+id: spring-java
+displayName: Spring Boot (Java)
+kind: framework
+status: stable
+since: 1.4.0
+language: java
+frameworkRef: framework.md

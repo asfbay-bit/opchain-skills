@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin.json",
+  "name": "opchain",
+  "version": "2.0.4",
+  "description": "The opchain skill pipeline, session-state and next-skill hooks, and explicit per-repository Git commit verification. Run /oc-enroll successfully in each repository to activate commit checks; installing the plugin alone does not enroll repositories.",
+  "author": {
+    "name": "opchain",
+    "url": "https://opchain.dev"
+  },
+  "homepage": "https://opchain.dev",
+  "repository": "https://github.com/asfbay-bit/opchain-skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "pipeline",
+    "gates",
+    "checkpoints",
+    "code-review",
+    "release"
+  ]
+}
