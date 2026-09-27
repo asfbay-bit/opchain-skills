@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=../_schema.json
+id: java
+displayName: Java
+kind: language
+status: stable
+since: 1.4.0
+testRunner: mvn test
+buildCmd: mvn package
+lintCmd: mvn checkstyle:check
+frameworks: [spring-java]
+langRef: language.md

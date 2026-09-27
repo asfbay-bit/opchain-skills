@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=../_schema.json
+id: spring-kotlin
+displayName: Spring Boot (Kotlin)
+kind: framework
+status: stable
+since: 1.4.0
+language: kotlin
+frameworkRef: framework.md

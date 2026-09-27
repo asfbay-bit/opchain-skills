@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=../_schema.json
+id: ios-swiftui
+displayName: iOS (SwiftUI)
+kind: mobile
+status: stable
+since: 1.4.0
+mobilePlatform: ios
+defaultPlatform: app-store
+supportedPlatforms: [app-store]
+mobileRef: mobile.md

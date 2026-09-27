@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: opchain documentation
+    url: https://opchain.dev
+    about: Skill docs, install guide, and changelog
+  - name: opchain skill catalog
+    url: https://opchain.dev/skills
+    about: Triggers, examples, and per-skill detail pages
