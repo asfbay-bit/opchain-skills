@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=../_schema.json
+id: go
+displayName: Go
+kind: language
+status: stable
+since: 1.4.0
+testRunner: go test
+buildCmd: go build ./...
+lintCmd: golangci-lint run
+langRef: language.md
