@@ -1,0 +1,113 @@
+name: opchain evidence
+
+# Written by `/oc-enroll --ci` (scripts/install-git-drivers.mjs --ci). Runs the
+# same two boundary checks the opchain repository runs on itself:
+#
+#   1. verify the received candidate — the vendored verifier under
+#      .opchain/runtime/ reruns the .bugcheck.json checks on the exact
+#      pull-request head and writes a receipt. The verifier and the policy come
+#      from the BASE branch, so a pull request cannot weaken the gate that
+#      judges it; the head's own policy is run too, because the evidence step
+#      binds to it.
+#   2. require source-bound Docs and Repo evidence — the pr-docs-v1 and
+#      pr-readiness-v1 handoffs in .checkpoints/ must cover this head's tree
+#      projection.
+#
+# What this workflow cannot see: receipts and bypass records live in each
+# developer's .git/, so here bypass-accountability can only list the commits
+# that declare a bypass with an Opchain-Bypass: trailer. A commit made with
+# --no-verify and pushed with --no-verify leaves nothing for CI to read; the
+# local pre-push hook is what refuses it. Step 1 still re-checks the head.
+#
+# Local hooks cannot be a remote trust boundary (anyone can --no-verify or
+# delete them); step 1 is the independent check. Pull requests opened by
+# Dependabot (the PR author, not a label anyone can add) skip the evidence
+# step: no session writes handoffs for them, so the verifier is their gate.
+# Refresh .opchain/runtime/ by re-running `/oc-enroll --ci --force`.
+#
+# Limit: a `pull_request` workflow runs the definition from the PR itself, so a
+# PR can edit this file. The base-branch guarantee holds only with CODEOWNERS
+# or required review on .github/workflows/ and .opchain/ (or an
+# organization-required workflow). The base runtime is extracted before any PR
+# code runs, dependencies install with --ignore-scripts, and the verifier
+# steps clear NODE_OPTIONS, so PR lifecycle scripts cannot redirect it.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: opchain-evidence-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evidence:
+    name: opchain — verify candidate, require evidence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # merge-base(origin/<base>, HEAD) decides which commits the bypass
+          # accountability check reads; a shallow clone has no merge base.
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Load the verifier and policy from the base branch
+        # Before any PR-controlled code runs, and to a fixed path (not
+        # $GITHUB_ENV, which a later step could append to).
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          base_dir="$RUNNER_TEMP/opchain-base"
+          mkdir -p "$base_dir"
+          if git cat-file -e "origin/$BASE_REF:.opchain/runtime/scripts/verify-candidate.mjs" 2>/dev/null; then
+            git archive "origin/$BASE_REF" .opchain/runtime | tar -x -C "$base_dir"
+          else
+            # Bootstrap: the pull request that first adds the runtime has no base copy.
+            echo "::warning::origin/$BASE_REF has no .opchain/runtime/; using this pull request's own verifier (not independent until it merges)."
+            mkdir -p "$base_dir/.opchain" && cp -R .opchain/runtime "$base_dir/.opchain/runtime"
+          fi
+          if git cat-file -e "origin/$BASE_REF:.bugcheck.json" 2>/dev/null; then
+            git show "origin/$BASE_REF:.bugcheck.json" > "$base_dir/bugcheck.json"
+          else
+            echo "::warning::origin/$BASE_REF has no .bugcheck.json; only this pull request's own policy is checked."
+          fi
+      - name: Install dependencies
+        # --ignore-scripts: PR lifecycle scripts must not run before the verifier.
+        run: |
+          if [ -f package-lock.json ]; then npm ci --ignore-scripts
+          elif [ -f package.json ]; then npm install --ignore-scripts
+          else echo "no package.json — the verifier runs the commands .bugcheck.json declares"; fi
+      - name: Verify the received candidate against the base policy
+        env:
+          NODE_OPTIONS: ""
+        run: |
+          base_dir="$RUNNER_TEMP/opchain-base"
+          if [ ! -f "$base_dir/bugcheck.json" ]; then echo "skipped: no base policy"; exit 0; fi
+          # The head's tree with only .bugcheck.json swapped for the base copy,
+          # staged in a scratch index so the checkout itself is untouched.
+          export GIT_INDEX_FILE="$RUNNER_TEMP/opchain-base.index"
+          git read-tree HEAD
+          git update-index --add --cacheinfo "100644,$(git hash-object -w "$base_dir/bugcheck.json"),.bugcheck.json"
+          node "$base_dir/.opchain/runtime/scripts/verify-candidate.mjs" run --repo . --json
+      - name: Verify the received candidate against its own policy
+        env:
+          NODE_OPTIONS: ""
+        run: node "$RUNNER_TEMP/opchain-base/.opchain/runtime/scripts/verify-candidate.mjs" run --repo . --json
+      - name: Require source-bound Docs and Repo evidence
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        env:
+          NODE_OPTIONS: ""
+        run: |
+          runtime="$RUNNER_TEMP/opchain-base/.opchain/runtime"
+          if [ ! -f "$runtime/scripts/lib/release-evidence.mjs" ]; then
+            echo "::error::The base branch's .opchain/runtime/ has no release-evidence.mjs — the installed opchain package did not carry the evidence gate. Re-run /oc-enroll --ci --force from a package that does."
+            exit 1
+          fi
+          if ! node "$runtime/scripts/lib/release-evidence.mjs" --stage pr --repo . --bypass-source trailers; then
+            echo "::error::Source-bound evidence is missing for this head (the FAIL lines above name the handoff). Bind it from the branch: run /oc-pr (oc-git-ops runs oc-docs-forge → pr-docs-v1 and oc-repo-ops → pr-readiness-v1) or npm run checkpoint -- handoff <skill> <policy>, commit .checkpoints/, push. CI reads only Opchain-Bypass: trailers; it cannot see a bypass that skipped the local hooks."
+            exit 1
+          fi

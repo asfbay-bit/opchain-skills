@@ -1,0 +1,20 @@
+#!/bin/sh
+# ow-tools: the code add-on for the ow- skills. Claude Code puts this plugin's
+# bin/ on the Bash tool's PATH, so skills call it as a bare command.
+# Needs Node 20+; says so plainly (exit 3) instead of failing obscurely. The
+# check runs here, before any module loads, because an older Node fails while
+# linking lib/ (node:os availableParallelism) with a stack trace. The hook verb
+# exits 0 silently instead: a SessionStart hook never fails the session.
+# Shell built-ins only (plus node itself), so it works on a minimal PATH.
+case "$0" in */*) here=${0%/*} ;; *) here=. ;; esac
+here=$(CDPATH= cd -- "$here" && pwd -P)
+found=$(node --version 2>/dev/null) || found=""
+major=${found#v}
+major=${major%%.*}
+case "$major" in '' | *[!0-9]*) major=0 ;; esac
+if [ "$major" -lt 20 ]; then
+  if [ "$1" = "hook" ]; then exit 0; fi
+  echo "ow-tools: Node.js 20 or newer is required (found ${found:-none}; macOS: brew install node)" >&2
+  exit 3
+fi
+exec node "$here/../lib/cli.mjs" "$@"
