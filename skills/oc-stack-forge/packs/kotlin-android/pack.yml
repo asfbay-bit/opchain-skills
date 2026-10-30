@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=../_schema.json
+id: kotlin-android
+displayName: Android (Kotlin)
+kind: mobile
+mobilePlatform: android
+status: stable
+since: 1.4.0
+defaultPlatform: play-store
+supportedPlatforms: [play-store]
+mobileRef: mobile.md

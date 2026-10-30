@@ -1,0 +1,365 @@
+# ow-uat edges (ow- cross-talk contract R15), schema 1.
+# What this skill writes, reads and hands off, as data. The body's "Reads from"
+# and "Hands off to" tables say the same in words; check-skill-contracts reads
+# this file to hold the family to one writer per file and to edges that match
+# on both ends. Paths are relative to opchain-work/. Format: skills-work/README.md.
+schema: 1
+skill: ow-uat
+
+# The verb other skills hand files to ("use ow-uat on <path>", owner decision O4):
+# its rules live in the reference named here, which must cover every path below.
+routes:
+  verb: /ow-uat
+  reference: references/routing-and-resume.md
+  paths: [builds/<client>/ready-for-uat.md, uat/<client>/]
+
+# A log only this skill writes, from several verbs (owner decision O2): kind, role,
+# source and session of each credential seen, never the value.
+append_logs: [uat/<client>/secrets-seen.log]
+
+writes:
+  # -plan, exact per mode. --keep-frozen writes uat.yaml only; --add-co and --refreeze
+  # re-copy into agreed/; --add-co and --addendum write scenarios.
+  - { path: uat/<client>/uat.yaml, verb: /ow-uat-plan, modes: [--add-co, --addendum, --keep-frozen, --refreeze] }
+  - { path: uat/<client>/agreed/scope.md, verb: /ow-uat-plan, modes: [--refreeze] }
+  - { path: uat/<client>/agreed/acceptance.md, verb: /ow-uat-plan, modes: [--refreeze] }
+  - { path: uat/<client>/agreed/quick-scope.md, verb: /ow-uat-plan, modes: [--refreeze] }
+  - { path: uat/<client>/agreed/contract-terms.md, verb: /ow-uat-plan, modes: [--refreeze] }
+  - { path: uat/<client>/agreed/CO-nn.md, verb: /ow-uat-plan, modes: [--add-co, --refreeze] }
+  - { path: uat/<client>/scenarios/SC-nn.md, verb: /ow-uat-plan, modes: [--add-co, --addendum] }
+  # -pack: the Markdown source of each role's pack (Sprint 3 departure: ow-tools exports it), its exports, the template.
+  - { path: uat/<client>/pack.yaml, verb: /ow-uat-pack }
+  - { path: uat/<client>/uat-pack-<role>.md, verb: /ow-uat-pack }
+  - { path: uat/<client>/export/uat-pack-<role>.html, verb: /ow-uat-pack }
+  - { path: uat/<client>/export/uat-pack-<role>.pdf, verb: /ow-uat-pack }
+  - { path: uat/<client>/export/uat-pack-<role>.docx, verb: /ow-uat-pack }
+  - { path: uat/<client>/export/results-template.csv, verb: /ow-uat-pack }
+  # -run: one file per session, never edited; the evidence index.
+  - { path: uat/<client>/runs/RUN-nn.md, verb: /ow-uat-run }
+  - { path: uat/<client>/evidence/index.md, verb: /ow-uat-run }
+  # -defect: every UAT-nn, from logging to its terminal state.
+  - { path: uat/<client>/defects/UAT-nn.md, verb: /ow-uat-defect }
+  # -signoff, exact per mode. The request (and its export, a Sprint 3 departure) only in plain mode;
+  # the three sign-off files only with --signed or --deemed; every mode updates request statuses first.
+  - { path: uat/<client>/signoff-request-<n>.md, verb: /ow-uat-signoff }
+  - { path: uat/<client>/export/signoff-request-<n>.pdf, verb: /ow-uat-signoff }
+  - { path: uat/<client>/export/signoff-request-<n>.docx, verb: /ow-uat-signoff }
+  - { path: uat/<client>/signoff-requests.yaml, verb: /ow-uat-signoff, modes: [--sent, --signed, --deemed, --readiness, --builder-delay, --backstop, --addendum] }
+  - { path: uat/<client>/signoff.md, verb: /ow-uat-signoff --signed, modes: [--deemed] }
+  - { path: uat/<client>/acceptance-record.md, verb: /ow-uat-signoff --signed, modes: [--deemed] }
+  - { path: uat/<client>/punch-list.md, verb: /ow-uat-signoff --signed, modes: [--deemed] }
+  - { path: uat/<client>/backstop-log.yaml, verb: /ow-uat-signoff --readiness, modes: [--builder-delay] }
+  - { path: uat/<client>/backstop.md, verb: /ow-uat-signoff --backstop }
+  - { path: uat/<client>/acceptance-addendum-CO-nn.md, verb: /ow-uat-signoff --addendum }
+  # The skill-local log (append_logs above).
+  - { path: uat/<client>/secrets-seen.log, verb: /ow-uat-plan, append: true }
+  - { path: uat/<client>/secrets-seen.log, verb: /ow-uat-pack, append: true }
+  - { path: uat/<client>/secrets-seen.log, verb: /ow-uat-run, append: true }
+  - { path: uat/<client>/secrets-seen.log, verb: /ow-uat-defect, append: true }
+  - { path: uat/<client>/secrets-seen.log, verb: /ow-uat-signoff, append: true }
+  - { path: STATUS.md, verb: /ow-uat-plan, append: true }
+  - { path: STATUS.md, verb: /ow-uat-pack, append: true }
+  - { path: STATUS.md, verb: /ow-uat-run, append: true }
+  - { path: STATUS.md, verb: /ow-uat-defect, append: true }
+  - { path: STATUS.md, verb: /ow-uat-signoff, append: true }
+
+reads:
+  - from: any
+    path: STATUS.md
+    fields: [the protocol's STATUS form]
+    if_absent: "First run: the welcome"
+    if_mismatch: Quote the lines as found; use only the dates and paths you can read
+  - from: ow-start
+    path: profile.md
+    shared: true
+    fields: [name, time_zone, holidays, handling]
+    if_absent: Count fix bounds and sessions on weekends only, and say so
+    if_mismatch: Report the fields found; ask only for the missing ones
+  # The build's readiness and change orders (ow-build's ready hand-off).
+  - from: ow-build
+    path: builds/<client>/ready-for-uat.md
+    fields: [ready, build_label, environment, the builder's run of each check, known issues, test data, milestones demoed]
+    if_absent: "-plan stops: NEXT use ow-build to mark the build ready for UAT"
+    if_mismatch: "A failing check, or ready: no: -plan stops and lists each failure"
+  - from: ow-build
+    path: builds/<client>/changes/CO-nn.md
+    fields: [id, kind, status, signed, adds_checks, requests, history]
+    if_absent: "No change orders: the plan and the quote are the basis"
+    if_mismatch: "Unsigned or declined: not in scope; an extension change order adds no checks"
+  # Read where ow-build left them (owner decisions O1, O6 and OD-1): ow-build's ready hand-off lists both.
+  - from: ow-build
+    path: builds/<client>/changes/requests.md
+    in_place: true
+    fields: [the row for a UAT-nn and its result]
+    if_absent: "No outcome yet: a condition keeps blocking"
+    if_mismatch: Quote the row; ask the user for the outcome
+  - from: ow-build
+    path: builds/<client>/ledger.md
+    in_place: true
+    fields: [the delivery payment's state]
+    if_absent: "--backstop only: not invoiced; continue"
+    if_mismatch: Ask the user whether the delivery half is invoiced
+  # The signed plan, read in place (O1, OD-1): ow-build-plan hands it to ow-build, which hands it on to ow-uat in place.
+  - from: ow-build-plan
+    path: plans/<client>/scope.md
+    in_place: true
+    fields: [work packages, out of scope, client dependencies, UAT approach]
+    if_absent: "A quick-quote job reads quick-scope.md; with neither, -plan stops"
+    if_mismatch: Report the fields found; freeze nothing until the user confirms
+  - from: ow-build-plan
+    path: plans/<client>/acceptance.md
+    in_place: true
+    fields: [AC ids with when, then, how we check, test data, cases, kind]
+    if_absent: "A quick-quote job reads quick-scope.md; with neither, -plan stops"
+    if_mismatch: Report the checks found; stop until every check parses
+  - from: ow-build-plan
+    path: plans/<client>/quick-scope.md
+    in_place: true
+    fields: [in scope, out of scope, acceptance checks, UAT approach]
+    if_absent: "A full plan reads scope.md and acceptance.md; with neither, -plan stops"
+    if_mismatch: Report the sections found; stop until every check parses
+  - from: ow-build-plan
+    path: plans/<client>/contract-inputs.md
+    in_place: true
+    fields: [uat, schedule, payment_terms_days, acceptance_definition, delivery_definition, contract_clauses, documentation_sku, Ownership]
+    if_absent: "Read quote.md's client part; no UAT line anywhere: offers.md defaults, else ask; clauses: none"
+    if_mismatch: Report the wording; record the user's dated statement of which definition governs
+  - from: ow-build-plan
+    path: plans/<client>/quote.md
+    in_place: true
+    fields: [the client part's UAT line, What I will deliver (includes), Acceptance, schedule]
+    if_absent: "Use contract-inputs.md alone; no UAT line: offers.md defaults, else ask"
+    if_mismatch: Report the wording; ask which governs
+  - from: ow-build-plan
+    path: plans/<client>/map/roles.md
+    in_place: true
+    fields: [roles]
+    if_absent: "A quick-quote job takes roles from quick-scope.md's UAT approach; else ask"
+    if_mismatch: Use the rows that parse; ask for the rest
+  - from: ow-build-plan
+    path: plans/<client>/map/future.md
+    in_place: true
+    fields: [main tasks]
+    if_absent: "Required scenarios only; say so"
+    if_mismatch: Use the steps that parse
+  - from: ow-handoff
+    path: handoffs/<client>/dates.yaml
+    in_place: true
+    fields: [handoff_date]
+    if_absent: "--backstop only: the notes are not delivered; continue"
+    if_mismatch: Ask the user whether the notes were delivered
+  # The user's own files.
+  - from: user
+    path: offers.md
+    fields: [uat.defaults, uat.min_testers_per_role, uat.follow_up_business_days]
+    if_absent: Ask for the bounds and record them user-stated
+    if_mismatch: Use the keys that parse; ask for the rest
+  - from: user
+    path: handoffs.yaml
+    fields: [build, sign]
+    if_absent: Print the public default
+    if_mismatch: Print the public default and say the entry did not parse
+  - from: user
+    path: brand.yaml
+    fields: [name, colors, footer, lang]
+    if_absent: Neutral styling, and say so
+    if_mismatch: Use the keys that parse; neutral styling for the rest
+  - from: user
+    path: uat/<client>/evidence/<file>
+    fields: [a filled results template, a tester's file]
+    if_absent: Record the results the user reads out, labelled user-stated
+    if_mismatch: Import the rows that parse; list the rest; never guess a result
+
+  # Its own earlier files (detail in each phase file).
+  - { from: ow-uat, path: uat/<client>/uat.yaml, if_absent: "Every verb except -plan stops: NEXT use ow-uat-plan", if_mismatch: "Report the keys found; resume at the first plan step not recorded" }
+  - { from: ow-uat, path: uat/<client>/export/results-template.csv, if_absent: "Say -pack has not run; offer it", if_mismatch: "Import the rows that parse" }
+  - { from: ow-uat, path: uat/<client>/signoff-request-<n>.md, if_absent: "No request yet", if_mismatch: "Report what was found; write nothing" }
+  - { from: ow-uat, path: uat/<client>/signoff-requests.yaml, if_absent: "No requests yet", if_mismatch: "Report the rows found; write no request until the user confirms" }
+  - { from: ow-uat, path: uat/<client>/scenarios/SC-nn.md, if_absent: "Say -plan has not written scenarios; offer it", if_mismatch: "Use the scenarios that parse" }
+  - { from: ow-uat, path: uat/<client>/runs/RUN-nn.md, if_absent: "No runs yet: nothing passes", if_mismatch: "A run that does not parse counts for nothing" }
+  - { from: ow-uat, path: uat/<client>/defects/UAT-nn.md, if_absent: "No problems logged", if_mismatch: "Report the fields found; treat it as open" }
+  - { from: ow-uat, path: uat/<client>/signoff.md, if_absent: "Not signed off", if_mismatch: "Report what was found; write nothing" }
+  - { from: ow-uat, path: uat/<client>/backstop-log.yaml, if_absent: "No readiness notice recorded", if_mismatch: "Report the entries found" }
+
+hands_off:
+  # ow-uat's own steps.
+  - when: Plan written
+    to: ow-uat
+    verb: /ow-uat-pack
+    say: use ow-uat-pack on uat/<client>/
+    files: [uat/<client>/uat.yaml, uat/<client>/scenarios/SC-nn.md]
+    if_unavailable: Give each tester the scenarios for their role and the results columns by hand
+  - when: Packs written, or a fix or a session is due
+    to: ow-uat
+    verb: /ow-uat-run
+    say: use ow-uat-run on uat/<client>/
+    files: [uat/<client>/uat.yaml, uat/<client>/export/results-template.csv]
+    if_unavailable: Keep the filled results files in evidence/ and note each session's date
+  - when: A session recorded with a problem, a fix reported, or punch-list moves due
+    to: ow-uat
+    verb: /ow-uat-defect
+    say: use ow-uat-defect on uat/<client>/
+    files: [uat/<client>/runs/RUN-nn.md, uat/<client>/defects/UAT-nn.md]
+    if_unavailable: The run lists each failing scenario; log each problem by hand
+  - when: Every exit criterion holds
+    to: ow-uat
+    verb: /ow-uat-signoff
+    say: use ow-uat-signoff on uat/<client>/
+    files: [uat/<client>/runs/RUN-nn.md, uat/<client>/defects/UAT-nn.md]
+    if_unavailable: The runs show each required scenario passing on the latest build
+  - when: Request written
+    to: ow-uat
+    verb: /ow-uat-signoff --sent
+    say: use ow-uat-signoff to record the sending on uat/<client>/
+    files: [uat/<client>/signoff-request-<n>.md]
+    if_unavailable: Note the date you sent the request beside it
+  - when: Request sent
+    to: ow-uat
+    verb: /ow-uat-signoff --signed
+    say: use ow-uat-signoff to record the signature on uat/<client>/
+    files: [uat/<client>/signoff-request-<n>.md, uat/<client>/signoff-requests.yaml]
+    if_unavailable: Keep the signed request with the signing record
+  - when: The deemed date has passed, with the frozen clause
+    to: ow-uat
+    verb: /ow-uat-signoff --deemed
+    say: use ow-uat-signoff to apply deemed acceptance on uat/<client>/
+    files: [uat/<client>/signoff-requests.yaml]
+    if_unavailable: Take it up under the contract's clause yourself
+  - when: A condition's change order is signed
+    to: ow-uat
+    verb: /ow-uat-plan --add-co
+    say: use ow-uat-plan to add CO-nn to uat/<client>/
+    files: [uat/<client>/defects/UAT-nn.md]
+    if_unavailable: Add the change order's checks to the test by hand
+  - when: A change order not in the acceptance, delivered after sign-off
+    to: ow-uat
+    verb: /ow-uat-plan --addendum
+    say: use ow-uat-plan to write the addendum for CO-nn in uat/<client>/
+    files: [uat/<client>/signoff.md]
+    if_unavailable: Write scenarios for the change order's checks by hand
+  - when: The addendum's checks pass
+    to: ow-uat
+    verb: /ow-uat-signoff --addendum
+    say: use ow-uat-signoff to confirm the addendum for CO-nn on uat/<client>/
+    files: [uat/<client>/runs/RUN-nn.md]
+    if_unavailable: Record the client's confirmation of the change order's checks by hand
+  - when: A basis file changed upstream, kept as frozen
+    to: ow-uat
+    verb: /ow-uat-plan --keep-frozen
+    say: use ow-uat-plan to keep <file> frozen in uat/<client>/
+    files: [uat/<client>/uat.yaml]
+    if_unavailable: Note that the frozen copy stands, with the date
+  - when: A basis file changed upstream, taken again
+    to: ow-uat
+    verb: /ow-uat-plan --refreeze
+    say: use ow-uat-plan to refreeze <file> in uat/<client>/
+    files: [uat/<client>/uat.yaml]
+    if_unavailable: Copy the upstream file into agreed/ by hand, with a dated note
+  - when: The builder finished all it can alone, on a smaller project
+    to: ow-uat
+    verb: /ow-uat-signoff --readiness
+    say: use ow-uat-signoff to record the readiness notice on uat/<client>/
+    files: [uat/<client>/signoff.md]
+    if_unavailable: Keep the readiness notice with its date
+  - when: The backstop date has passed
+    to: ow-uat
+    verb: /ow-uat-signoff --backstop
+    say: use ow-uat-signoff to apply the backstop on uat/<client>/
+    files: [uat/<client>/backstop-log.yaml]
+    if_unavailable: Take it up under the contract's backstop clause yourself
+  # The build.
+  - when: A Change, or an extension requested for a client-side event
+    to: ow-build
+    verb: /ow-build-change
+    say: use ow-build to price the change from uat/<client>/defects/UAT-nn.md
+    files:
+      - { path: uat/<client>/defects/UAT-nn.md, fields: [class, extension requested, client cause, the request] }
+    if_unavailable: Price the change from the UAT-nn file by hand; sign it before work
+  - when: Signed or deemed, on a larger project
+    to: ow-build
+    verb: /ow-build-invoice
+    say: use ow-build to invoice the acceptance payment from uat/<client>/signoff.md
+    files:
+      - { path: uat/<client>/signoff.md, fields: [signed or deemed date, request number] }
+      - { path: uat/<client>/uat.yaml, fields: [the governing acceptance or delivery definition, dated] }
+    if_unavailable: Invoice the acceptance payment by hand from signoff.md
+  - when: The backstop applied
+    to: ow-build
+    verb: /ow-build-invoice
+    say: use ow-build to invoice the delivery payment (backstop)
+    files:
+      - { path: uat/<client>/backstop.md, fields: [backstop date] }
+      - { path: uat/<client>/uat.yaml, fields: [the governing acceptance or delivery definition, dated] }
+    if_unavailable: Invoice the delivery half by hand from backstop.md, once
+  - when: No ready-for-uat.md
+    to: ow-build
+    verb: /ow-build-ready
+    say: use ow-build to mark the build ready for UAT
+    files: []
+    if_unavailable: Ask whoever builds it for every check's last run
+  - when: A Defect for the builder
+    destination: build
+    files: [uat/<client>/defects/UAT-nn.md]
+    if_unavailable: Give defects/UAT-nn.md to whoever builds it
+  - when: A request ready to send for signature
+    destination: sign
+    files: [uat/<client>/signoff-request-<n>.md]
+    if_unavailable: Send signoff-request-<n>.md to the client for signature
+  # The handoff and the documentation (planned skills; their designs' reads, H1 and §4.1).
+  - when: Signed or deemed
+    to: ow-handoff
+    verb: /ow-handoff-start
+    say: use ow-handoff-start on uat/<client>/
+    files:
+      - { path: uat/<client>/signoff.md, fields: [request, signed or deemed date, signer role, build label, post-acceptance change orders, test accounts, delivery backstop date] }
+      - { path: uat/<client>/acceptance-record.md, fields: [each check, final result, cases passed, run and date, run_by, build label, cleared evidence] }
+      - { path: uat/<client>/punch-list.md, fields: [each item, its UAT-nn, logged date, reported after request] }
+      - { path: uat/<client>/agreed/scope.md, fields: [the agreed basis] }
+      - { path: uat/<client>/agreed/acceptance.md, fields: [the agreed checks] }
+      - { path: uat/<client>/agreed/quick-scope.md, fields: [the agreed basis] }
+      - { path: uat/<client>/agreed/CO-nn.md, fields: [the change orders in the acceptance] }
+      - { path: uat/<client>/agreed/contract-terms.md, fields: [included, ownership terms] }
+      - { path: uat/<client>/acceptance-addendum-CO-nn.md, fields: [checks, results, confirmation date] }
+      - { path: uat/<client>/secrets-seen.log, fields: [kind, role, source, session] }
+      - { path: uat/<client>/evidence/index.md, fields: [item, state, cleared] }
+      - { path: uat/<client>/uat.yaml, fields: [the governing acceptance or delivery definition, dated] }
+      # Read by ow-handoff where they lie (OW-06 ruling O2, a data edit): the signed plan and the build, carried at every hop.
+      - { path: plans/<client>/contract-inputs.md, in_place: true }
+      - { path: plans/<client>/quote.md, in_place: true }
+      - { path: plans/<client>/map/systems.md, in_place: true }
+      - { path: plans/<client>/evidence.md, in_place: true }
+      - { path: builds/<client>/build.yaml, in_place: true }
+      - { path: builds/<client>/ledger.md, in_place: true }
+      - { path: builds/<client>/changes/CO-nn.md, in_place: true }
+    if_unavailable: signoff.md, acceptance-record.md, punch-list.md and agreed/ hold what the handoff needs
+  - when: A report after sign-off
+    to: ow-handoff
+    verb: /ow-handoff-fix
+    say: use ow-handoff-fix on handoffs/<client>/
+    files:
+      - { path: uat/<client>/punch-list.md, fields: [each item, its UAT-nn, logged date, reported after request] }
+    if_unavailable: Log it as a covered fix by hand, against the agreed checks
+  - when: Signed or deemed, with the documentation line bought (owner decision O5)
+    to: ow-documentation
+    verb: /ow-documentation-start
+    say: use ow-documentation-start on uat/<client>/
+    files:
+      - { path: uat/<client>/signoff.md, fields: [signed or deemed date] }
+      - { path: uat/<client>/uat.yaml, fields: [roles, tester ids, environment, test data] }
+      - { path: uat/<client>/scenarios/SC-nn.md, fields: [role, steps, expected result, data pointers] }
+      - { path: uat/<client>/defects/UAT-nn.md, fields: [class, Training gap topic] }
+      - { path: uat/<client>/evidence/index.md, fields: [cleared items] }
+      # Read by ow-documentation where they lie (ruling O2 of the documentation build, a data edit): the signed plan and the build,
+      # carried at every hop from their producers.
+      - { path: plans/<client>/contract-inputs.md, in_place: true }
+      - { path: plans/<client>/scope.md, in_place: true }
+      - { path: plans/<client>/quick-scope.md, in_place: true }
+      - { path: plans/<client>/map/roles.md, in_place: true }
+      - { path: plans/<client>/map/future.md, in_place: true }
+      - { path: builds/<client>/build.yaml, in_place: true }
+      - { path: builds/<client>/ledger.md, in_place: true }
+      - { path: builds/<client>/changes/CO-nn.md, in_place: true }
+      - { path: <repo>/spec/02-architecture.md, in_place: true }
+      - { path: <repo>/spec/04-integrations.md, in_place: true }
+      - { path: <repo>/spec/scope-and-milestones.md, in_place: true }
+    if_unavailable: The scenarios, training gaps and cleared evidence stay in uat/<client>/ for later

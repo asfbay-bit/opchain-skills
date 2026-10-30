@@ -1,0 +1,77 @@
+schema: 1
+skill: ow-care
+append_logs: [care/<client>/secrets-seen.log]
+routes:
+  verb: /ow-care
+  reference: references/entry-and-requests.md
+  paths: [handoffs/<client>/care-start.md, handoffs/<client>/fixes/FIX-nn.md, plans/<client>/, care/<client>/]
+writes:
+  - { path: care/<client>/onboarding.md, verb: /ow-care-onboard }
+  - { path: care/<client>/export/onboarding.pdf, verb: /ow-care-onboard }
+  - { path: care/<client>/export/onboarding.docx, verb: /ow-care-onboard }
+  - { path: care/<client>/invoices/INV-request-onboarding.md, verb: /ow-care-onboard }
+  - { path: care/<client>/care.yaml, verb: /ow-care-start }
+  - { path: care/<client>/months/M-01.md, verb: /ow-care-start }
+  - { path: care/<client>/invoices/INV-request-care-M-01.md, verb: /ow-care-start }
+  - { path: care/<client>/requests/CARE-nn.md, verb: /ow-care-request, seeded_by: /ow-care-start }
+  - { path: care/<client>/health.yaml, verb: /ow-care-health }
+  - { path: care/<client>/health/M-nn.md, verb: /ow-care-health }
+  - { path: care/<client>/health/M-00.md, verb: /ow-care-health, seeded_by: /ow-care-onboard }
+  - { path: care/<client>/operator-notes.md, verb: /ow-care-notes, seeded_by: /ow-care-onboard }
+  - { path: care/<client>/access.md, verb: /ow-care-access, seeded_by: /ow-care-start }
+  - { path: care/<client>/hours-input.json, verb: /ow-care-month }
+  - { path: care/<client>/months/M-nn.md, verb: /ow-care-month }
+  - { path: care/<client>/ledger.md, verb: /ow-care-month }
+  - { path: care/<client>/reports/M-nn.md, verb: /ow-care-month }
+  - { path: care/<client>/export/report-M-nn.pdf, verb: /ow-care-month }
+  - { path: care/<client>/export/report-M-nn.docx, verb: /ow-care-month }
+  - { path: care/<client>/invoices/INV-request-care-M-nn.md, verb: /ow-care-month }
+  - { path: care/<client>/invoices/INV-request-care-final-settlement.md, verb: /ow-care-month }
+  - { path: care/<client>/terms-addendum-<date>.md, verb: /ow-care-change }
+  - { path: care/<client>/end.md, verb: /ow-care-end }
+  - { path: care/<client>/export/end-email.html, verb: /ow-care-end }
+  - { path: care/<client>/export/end-email.txt, verb: /ow-care-end }
+  - { path: care/<client>/secrets-seen.log, verb: /ow-care-start, append: true }
+  - { path: care/<client>/secrets-seen.log, verb: /ow-care-onboard, append: true }
+  - { path: care/<client>/secrets-seen.log, verb: /ow-care-request, append: true }
+  - { path: care/<client>/secrets-seen.log, verb: /ow-care-health, append: true }
+  - { path: care/<client>/secrets-seen.log, verb: /ow-care-notes, append: true }
+  - { path: care/<client>/secrets-seen.log, verb: /ow-care-access, append: true }
+  - { path: care/<client>/secrets-seen.log, verb: /ow-care-month, append: true }
+  - { path: care/<client>/secrets-seen.log, verb: /ow-care-change, append: true }
+  - { path: care/<client>/secrets-seen.log, verb: /ow-care-end, append: true }
+  - { path: STATUS.md, verb: /ow-care-onboard, append: true }
+  - { path: STATUS.md, verb: /ow-care-start, append: true }
+  - { path: STATUS.md, verb: /ow-care-request, append: true }
+  - { path: STATUS.md, verb: /ow-care-health, append: true }
+  - { path: STATUS.md, verb: /ow-care-notes, append: true }
+  - { path: STATUS.md, verb: /ow-care-access, append: true }
+  - { path: STATUS.md, verb: /ow-care-month, append: true }
+  - { path: STATUS.md, verb: /ow-care-change, append: true }
+  - { path: STATUS.md, verb: /ow-care-end, append: true }
+reads:
+  - { from: any, path: STATUS.md, fields: [newest and awaiting lines], if_absent: "First run: begin at entry", if_mismatch: "Quote readable lines and ask" }
+  - { from: ow-start, path: profile.md, shared: true, fields: [time_zone, holidays, handling], if_absent: "Ask and record user-stated calendar", if_mismatch: "Ask for missing fields" }
+  - { from: ow-start, path: offers.md, shared: true, fields: [after_handoff], if_absent: "Takeover start waits for terms", if_mismatch: "Ask for missing terms" }
+  - { from: ow-start, path: handoffs.yaml, shared: true, fields: [build, invoice], if_absent: "Use public defaults", if_mismatch: "Use public defaults" }
+  - { from: ow-start, path: intake/<client>/intake-record.md, fields: [the bank's fields with confidence], in_place: true, if_absent: "Takeover waits for intake", if_mismatch: "List unknowns" }
+  - { from: ow-build-plan, path: plans/<client>/quick-scope.md, fields: [eight review parts], if_absent: "Onboard waits for scope", if_mismatch: "List missing parts" }
+  - { from: ow-build-plan, path: plans/<client>/quote.md, fields: [mode, fixed_price, payment], if_absent: "Onboard waits for quote", if_mismatch: "Stop on non-onboarding mode" }
+  - { from: ow-build-plan, path: plans/<client>/contract-inputs.md, fields: [accepted, payment], if_absent: "Onboard waits for signed review", if_mismatch: "Ask for signing evidence" }
+  - { from: ow-handoff, path: handoffs/<client>/after-offer.md, fields: [choice, every frozen term], if_absent: "Takeover uses offers.md", if_mismatch: "Latest choice wins; ask if unclear" }
+  - { from: ow-handoff, path: handoffs/<client>/care-start.md, fields: [care_start, kept access with removal steps, carried fixes, waiting route care requests], if_absent: "After build: use ow-handoff-close", if_mismatch: "Compare dates, explicit agreement wins" }
+  - { from: ow-handoff, path: handoffs/<client>/care-start-addendum-<date>.md, fields: [care_start, kept access with removal steps, carried fixes, waiting route care requests], if_absent: "No later change", if_mismatch: "Ask for missing item" }
+  - { from: ow-handoff, path: handoffs/<client>/fixes/FIX-nn.md, fields: [class, reported, route, the request], if_absent: "No carried request", if_mismatch: "Exclude unresolved classification" }
+  - { from: ow-handoff, path: handoffs/<client>/operator-notes.md, fields: [OP-nn entries], if_absent: "Takeover makes own notes", if_mismatch: "Mark unknown" }
+  - { from: ow-handoff, path: handoffs/<client>/accounts.md, fields: [account rows by role], if_absent: "Ask for inventory", if_mismatch: "List unknown accounts" }
+  - { from: ow-handoff, path: handoffs/<client>/dates.yaml, fields: [window_end], if_absent: "Ask for end of fix window", if_mismatch: "Ask for date" }
+  - { from: ow-documentation, path: docs/<client>/runbook.md, fields: [OP-nn ids], if_absent: "Use operator notes or takeover review", if_mismatch: "Mark unchecked items" }
+  - { from: ow-documentation, path: docs/<client>/adoption.md, fields: [summary, open gaps by role], if_absent: "No adoption requests", if_mismatch: "Use readable gaps" }
+  - { from: ow-care, path: care/<client>/care.yaml, fields: [frozen terms], if_absent: "Only start and onboard proceed", if_mismatch: "Refuse until corrected" }
+  - { from: ow-care, path: care/<client>/months/M-nn.md, fields: [state, period], if_absent: "Start creates M-01", if_mismatch: "Ask before close" }
+  - { from: ow-care, path: care/<client>/requests/CARE-nn.md, fields: [class, status, hours, reply], if_absent: "No request", if_mismatch: "Exclude from totals" }
+  - { from: ow-care, path: care/<client>/health/M-nn.md, fields: [results, hours], if_absent: "Record not checked", if_mismatch: "Ask for result" }
+  - { from: ow-care, path: care/<client>/access.md, fields: [purpose, owner, removal], if_absent: "Ask for access inventory", if_mismatch: "End blocks" }
+  - { from: ow-care, path: care/<client>/terms-addendum-<date>.md, fields: [effective, change, acceptance], if_absent: "Original terms govern", if_mismatch: "Original terms govern until settled" }
+hands_off:
+  - { when: "Care request needs a separate quote", to: ow-build-plan, verb: /ow-build-plan-quote --quick, say: "use ow-build-plan to quote care/<client>/requests/CARE-nn.md", files: [{ path: care/<client>/requests/CARE-nn.md, fields: [request, estimate, reason] }], if_unavailable: "Give CARE-nn.md to whoever scopes the separate job" }

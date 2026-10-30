@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin.json",
+  "name": "ow-tools",
+  "version": "1.3.1",
+  "description": "Runs code on your machine. The Claude Code add-on for the ow- skills: local call transcription with speaker separation (ffmpeg, whisper.cpp, pyannote), branded and accessible PDF, Word and PowerPoint export (pandoc, Typst), Excel from CSV with formulas, screenshots of a test environment in your own Chrome, read-only health checks, a redacted scan of a repository's committed history for secrets (gitleaks), digests, date arithmetic (with the US federal contract calendar) and hours arithmetic, and a session-start list of open workstreams. Audio never leaves the machine; only health and capture use the network, for what you list. Needs Node 20+ and the tools /ow-tools lists; it installs nothing itself.",
+  "author": {
+    "name": "opchain",
+    "url": "https://opchain.dev"
+  },
+  "homepage": "https://opchain.dev",
+  "repository": "https://github.com/asfbay-bit/opchain-skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "ow",
+    "transcription",
+    "speaker-separation",
+    "pdf",
+    "docx",
+    "accessibility"
+  ]
+}

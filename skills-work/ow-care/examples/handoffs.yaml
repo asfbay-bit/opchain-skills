@@ -1,0 +1,84 @@
+# opchain-work/handoffs.yaml: INVENTED EXAMPLE with defaults only, shipped the
+# same in every ow- skill that reads it.
+#
+# Where work goes when it leaves the ow- skills. You write this file; no skill
+# edits it, checks a destination or names one. Each skill writes a neutral
+# handoff file first. With no say: line under a key (as here), the skill
+# prints a public default anyone can follow.
+#
+# ow-build-plan reads contract (after the client accepts a quote; file:
+# contract-inputs.md) and build (once the work is signed; file:
+# build-request.md). ow-build reads build (who builds it, and how),
+# change_order (a change agreed in principle; file:
+# changes/change-inputs-CO-nn.md) and invoice (a payment that has fallen due;
+# file: invoices/INV-request-<trigger>.md). ow-uat reads build (a problem
+# for the builder; file: defects/UAT-nn.md) and sign (a sign-off request for
+# the client to sign; file: signoff-request-<n>.md). ow-documentation reads
+# docs (where the finished documents go; files: export/ and the repository
+# copy). ow-handoff reads build (a covered fix or approved hourly help; files:
+# fixes/FIX-nn.md, help/HELP-nn.md) and invoice (hourly help and vendor
+# charges; files: invoices/INV-request-*.md). {files} is replaced with the
+# handoff file's path, as in:
+#
+#   contract:
+#     say: "send {files} to whoever drafts our contracts"
+#
+# build has one schema in two modes. "other" (or a build entry with only a
+# say: line, or none at all) is a line ow-build prints for you. "opchain" is
+# a builder that reads spec/ and writes sprints/ and .checkpoints/ in the
+# opchain project format: ow-build writes spec/ and prints these lines for you
+# to say in the same session. Put your own builder's name and verbs where the
+# angle brackets are; this example names none.
+#
+#   build:
+#     mode: other
+#     say: "give {files} to whoever builds it"
+#
+#   build:
+#     mode: opchain
+#     checkpoint: <builder>       # its progress: .checkpoints/<builder>.checkpoint.json
+#     plan: "use <builder> <its planning verb>"
+#     sprint: "use <builder> <its sprint verb> {n}"
+#     fix: "use <builder> <its quick-feature verb> {description}"
+#
+# docs names the client's destinations for documents and training. repo is
+# the two folders of the client's repository the Markdown goes into (the
+# defaults below); each other key is a say: line, printed when no document
+# connector for it is in the session, and an optional location: where a
+# connector puts the files (otherwise you type it when you confirm the push):
+#
+#   docs:
+#     repo: { path: docs/client-handbook/, handover_path: docs/handover/ }
+#     google_docs: { say: "upload {files} to the client's shared drive", location: "<the folder in that drive>" }
+#     wiki: { say: "paste {files} into the client's wiki space" }
+#
+# ow-draft reads drafts (where a finished draft goes; files: the client files
+# in export/C-n/ and the repository copy). Each key is one destination: repo
+# and path for a repository folder the Markdown goes into (repo is relative
+# to the folder that holds opchain-work/, path to the repository; written
+# only on a branch you made), say for a line printed when no connector for it
+# is in the session, location for where a connector puts the files
+# (otherwise you type it when you confirm the push), and limit for a post's
+# length in characters. ow-draft never names what a destination is:
+#
+#   drafts:
+#     blog: { repo: ../site, path: src/content/blog/ }
+#     social: { say: "post the text in {files} on your social page", limit: 280 }
+#     newsletter: { say: "paste {files} into your newsletter tool" }
+#     shared_drive: { say: "upload {files} to the client's shared folder", location: "<the folder in that drive>" }
+ow_artefact: ow-start/handoffs
+schema: 1
+written_by: user (created from the ow- example)
+workstream: none
+subject: none
+created: 2026-10-16
+clock: user-stated
+origin: user
+
+contract:       # after the client accepts a quote (file: contract-inputs.md)
+build:          # once the work is signed (file: build-request.md); see the two modes above
+change_order:   # a change agreed in principle during the build
+invoice:        # a payment that has fallen due during the build
+sign:           # a sign-off request ready for the client's signature
+docs:           # finished client documents and training (see the shape above)
+drafts:         # finished drafts, by destination (see the shape above)

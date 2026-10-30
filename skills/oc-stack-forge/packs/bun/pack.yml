@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=../_schema.json
+id: bun
+displayName: Bun
+kind: language
+status: stable
+since: 1.4.0
+testRunner: bun test
+buildCmd: bun run build
+lintCmd: biome check .
+langRef: language.md

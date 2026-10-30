@@ -1,0 +1,17 @@
+# brand.yaml — invented example for ow-tools export (schema 1).
+# Copy it to opchain-work/brand.yaml and put your own values in.
+schema: 1
+name: Example Studio
+# logo: brand/logo.png        # PNG, relative to this file
+# logo_alt: Example Studio logo
+colors:
+  text: "#1A1A1A"
+  background: "#FFFFFF"
+  primary: "#1F4E79"           # headings; needs 3:1 on the background
+  accent: "#2E6B4F"            # table header fill; black or white text must reach 4.5:1
+fonts:
+  heading: Libertinus Serif
+  body: Libertinus Serif
+footer: Example Studio · example.com
+lang: en-US
+page: letter

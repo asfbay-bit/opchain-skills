@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "opchain-work-tools",
+  "owner": {
+    "name": "opchain",
+    "url": "https://opchain.dev"
+  },
+  "metadata": {
+    "description": "ow-tools only: the code add-on for the ow- planning skills in Claude Code. Approving this marketplace approves ow-tools and nothing else.",
+    "version": "1.3.1"
+  },
+  "plugins": [
+    {
+      "name": "ow-tools",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/asfbay-bit/opchain-skills.git",
+        "path": "plugins/ow-tools",
+        "ref": "main"
+      },
+      "description": "Runs code on your machine: local transcription with speaker separation, branded and accessible PDF, Word and PowerPoint export, Excel with formulas, test-environment screenshots, read-only health checks, a redacted secrets scan of a repository's committed history, digests, date arithmetic (with the US federal contract calendar) and hours arithmetic, and a session-start list of open ow- workstreams. Audio never leaves the machine; only health and capture use the network.",
+      "version": "1.3.1",
+      "category": "productivity",
+      "keywords": [
+        "ow",
+        "transcription",
+        "pdf",
+        "docx"
+      ]
+    }
+  ]
+}

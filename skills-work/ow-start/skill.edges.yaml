@@ -1,0 +1,179 @@
+# ow-start edges (ow- cross-talk contract R15), schema 1.
+# What this skill writes, reads and hands off, as data. The body's "Reads from"
+# and "Hands off to" tables say the same in words; check-skill-contracts reads
+# this file to hold the family to one writer per file and to edges that match
+# on both ends. Paths are relative to opchain-work/. Format: skills-work/README.md.
+schema: 1
+skill: ow-start
+
+writes:
+  - { path: intake/<client>/intake.yaml, verb: /ow-start-prep }
+  - { path: intake/<client>/call-guide.md, verb: /ow-start-prep }
+  - { path: intake/<client>/send-ahead.md, verb: /ow-start-prep }
+  - { path: intake/<client>/intake-record.md, verb: /ow-start-extract }
+  - { path: intake/<client>/coverage.md, verb: /ow-start-extract }
+  - { path: intake/<client>/recap.md, verb: /ow-start-extract }
+  - path: profile.md
+    verb: /ow-setup
+    seeded_by: /ow-start-extract      # creates it on the first run only, when it does not exist
+  - { path: offers.md, verb: /ow-setup, once: true }        # created once from the example; then the user's
+  - { path: handoffs.yaml, verb: /ow-setup, once: true }    # created once from the example; then the user's
+  - { path: STATUS.md, verb: /ow-start-prep, append: true }
+  - { path: STATUS.md, verb: /ow-start-extract, append: true }
+  # The logs (1.1.0), exact per verb. -action writes one STATUS line only; -log,
+  # /ow-start and /ow-status write nothing.
+  - { path: logs/<workstream>/meetings/MTG-nn/agenda.md, verb: /ow-start-prep-meeting }
+  - { path: logs/<workstream>/meetings/MTG-nn/notes.md, verb: /ow-start-log-meeting }
+  - { path: logs/<workstream>/meetings/MTG-nn/follow-up.html, verb: /ow-start-log-meeting }
+  - { path: logs/<workstream>/meetings/MTG-nn/follow-up.txt, verb: /ow-start-log-meeting }
+  - { path: logs/<workstream>/decisions/DEC-nn.md, verb: /ow-start-log-decision }
+  - { path: STATUS.md, verb: /ow-start-prep-meeting, append: true }      # awaiting: meeting on <date> (O3)
+  - { path: STATUS.md, verb: /ow-start-log-meeting, append: true }       # one line per action, and "held" when prepared
+  - { path: STATUS.md, verb: /ow-start-action, append: true }            # one line
+  - { path: STATUS.md, verb: /ow-start-log-decision, append: true }      # a review line; a superseded review's closing line
+
+reads:
+  - from: any
+    path: STATUS.md
+    fields: [the protocol's STATUS form]
+    if_absent: "First run: show the welcome"
+    if_mismatch: Quote the lines as found, say which do not match the form, and use only the dates and paths you can read
+  - from: ow-start
+    verb: /ow-setup
+    path: profile.md
+    fields: [name, time_zone, holidays, handling]
+    if_absent: Ask only what this run needs (at most three questions, each skippable); extract seeds the file on first run
+    if_mismatch: Report the fields found against the ones expected; ask only for the missing ones
+  - from: user
+    path: offers.md
+    fields: [fit, "path: sections with label, kind, propose when, after yes"]
+    if_absent: Say no paths are set up; offer /ow-setup to create the file from the example, or ask the user to name the path in their own words
+    if_mismatch: Use the sections that parse, list the ones that do not, and ask the user to choose the path
+  - from: ow-start
+    verb: /ow-start-prep
+    path: intake/<client>/intake.yaml
+    fields: [mode, client, call_date]
+    if_absent: Extract asks the mode, the client's name and the call date
+    if_mismatch: Report what was found and ask for the missing keys
+  - from: ow-start
+    verb: /ow-start-prep
+    path: intake/<client>/call-guide.md
+    fields: [the must-ask list]
+    if_absent: Score coverage against the bank's default must-asks for the mode; coverage.md says "no call guide found"
+    if_mismatch: Score against the must-asks that parse; mark the rest NOT-CHECKED (guide unreadable)
+  - from: ow-start
+    verb: /ow-start-extract
+    path: intake/<client>/intake-record.md
+    fields: [open questions]
+    if_absent: Prep from the bank's default must-asks for the mode
+    if_mismatch: Use the open questions that parse; list the rest
+  - from: ow-tools
+    path: intake/<client>/transcript.md
+    fields: [speaker labels, times]
+    if_absent: Ask for a transcript or notes; nothing is extracted from memory
+    if_mismatch: Use what is readable and mark unreadable spans missing in coverage.md; a transcript with no speaker labels is treated as notes (MEDIUM cap)
+  # The logs (1.1.0).
+  - from: ow-tools
+    path: logs/<workstream>/meetings/MTG-nn/transcript.md
+    fields: [speaker labels, times, roles]
+    if_absent: "A recording in audio/: print the ow-tools NEXT. No recording: ask for the meeting tool's transcript saved as MTG-nn/transcript.md, or your notes"
+    if_mismatch: "Use what is readable and mark the rest not covered; no speaker labels: treat it as notes; a role not confirmed: ask, never guess"
+  - from: ow-start
+    verb: /ow-start-prep-meeting
+    path: logs/<workstream>/meetings/MTG-nn/agenda.md
+    fields: [items and their sources, attendees]
+    if_absent: "Log against no agenda: notes.md says agenda: none (no agenda)"
+    if_mismatch: Use the items that parse and list the rest under Not covered
+  - from: ow-start
+    verb: /ow-start-log-meeting
+    path: logs/<workstream>/meetings/MTG-nn/notes.md
+    fields: [Decisions]
+    if_absent: "Ask for the decision in your own words, with its source; nothing is taken from memory"
+    if_mismatch: Offer the decisions that parse and name the ones that do not
+  - from: ow-start
+    verb: /ow-start-log-decision
+    path: logs/<workstream>/decisions/DEC-nn.md
+    fields: [id, review_on, supersedes]
+    if_absent: "No decision with that id: list the ids that exist"
+    if_mismatch: "Report the header found; supersede nothing until the user confirms which decision it is"
+  - from: user
+    path: brand.yaml
+    fields: [name, colors, footer, logo, logo_alt]
+    if_absent: Neutral styling, and say so
+    if_mismatch: Use the keys that parse; neutral styling for the rest
+  # The index (/ow-start-log, decision L5; owner decision O1): header keys only, by path,
+  # never a body line or an amount. Rows: references/logs-status-and-index.md.
+  - { from: ow-start, index: true, reference: references/logs-status-and-index.md, path: intake/<client>/recap.md, fields: [created, path_label], if_absent: "No row", if_mismatch: "List the path with no date in its header" }
+  - { from: ow-tools, index: true, reference: references/logs-status-and-index.md, path: plans/<client>/workshops/W<n>/transcript.md, fields: [created], if_absent: "No row", if_mismatch: "List the path with no date in its header" }
+  - { from: ow-build-plan, index: true, reference: references/logs-status-and-index.md, path: plans/<client>/contract-inputs.md, fields: [created, accepted], if_absent: "No row", if_mismatch: "List the path with no date in its header" }
+  - { from: ow-build-plan, index: true, reference: references/logs-status-and-index.md, path: plans/<client>/build-request.md, fields: [created, signed], if_absent: "No row", if_mismatch: "List the path with no date in its header" }
+  - { from: ow-build, index: true, reference: references/logs-status-and-index.md, path: builds/<client>/demos/M<n>-record.md, fields: [created, demo_date], if_absent: "No row", if_mismatch: "List the path with no date in its header" }
+  - { from: ow-build, index: true, reference: references/logs-status-and-index.md, path: builds/<client>/changes/CO-nn.md, fields: [created, status], if_absent: "No row", if_mismatch: "List the path with no date in its header" }
+  - { from: ow-uat, index: true, reference: references/logs-status-and-index.md, path: uat/<client>/runs/RUN-nn.md, fields: [created, session_date], if_absent: "No row", if_mismatch: "List the path with no date in its header" }
+  - { from: ow-uat, index: true, reference: references/logs-status-and-index.md, path: uat/<client>/signoff.md, fields: [created, acceptance], if_absent: "No row", if_mismatch: "List the path with no date in its header" }
+  - { from: ow-handoff, index: true, reference: references/logs-status-and-index.md, path: handoffs/<client>/after-offer.md, fields: [created, choice], if_absent: "No row", if_mismatch: "List the path with no date in its header" }
+  - { from: ow-documentation, index: true, reference: references/logs-status-and-index.md, path: docs/<client>/docs.yaml, fields: [created, trainer], if_absent: "No row", if_mismatch: "List the path with no date in its header" }
+  - { from: ow-care, index: true, reference: references/logs-status-and-index.md, path: care/<client>/reports/M-nn.md, fields: [created], if_absent: "No row", if_mismatch: "List the path with no date in its header" }
+  - { from: ow-care, index: true, reference: references/logs-status-and-index.md, path: care/<client>/terms-addendum-<date>.md, fields: [created], if_absent: "No row", if_mismatch: "List the path with no date in its header" }
+
+hands_off:
+  - when: Prep is done
+    to: ow-start
+    verb: /ow-start-extract
+    say: use ow-start to extract intake/<client>/
+    files:
+      - { path: intake/<client>/intake.yaml, fields: [mode, client, call_date] }
+      - { path: intake/<client>/call-guide.md, fields: [the must-ask list] }
+    if_unavailable: Extract still runs from a transcript or notes; coverage uses the bank's defaults
+  - when: A recording exists and no transcript
+    to: ow-tools
+    verb: /ow-start-transcribe
+    say: use ow-tools to transcribe intake/<client>/audio/
+    files: []
+    if_unavailable: Supply the meeting tool's transcript or your notes
+  - when: Delivery mode, and the next stage is another session
+    to: ow-start
+    verb: /ow-start-prep
+    say: use ow-start to prep <client>
+    files:
+      - { path: intake/<client>/intake-record.md, fields: [open questions] }
+    if_unavailable: Take the open questions in intake-record.md into the session yourself
+  - when: The recap is done, the path leads to a Build Plan or a defined piece of work, and the client agrees
+    to: ow-build-plan
+    verb: /ow-build-plan      # "on <path>": ow-build-plan routes by the recap's path_kind
+    say: use ow-build-plan on intake/<client>/intake-record.md
+    files:
+      - { path: intake/<client>/intake-record.md, fields: [mode, client, call_date, the bank's fields with confidence, open questions] }
+      - { path: intake/<client>/recap.md, fields: [path_id, path_label, path_kind, path_systems, send_by] }
+      - { path: intake/<client>/coverage.md, fields: [must-ask statuses] }
+    if_unavailable: The recap and the intake record stand on their own; scope the next step by hand from them
+  # Amendment S1 (1.2.0): a care takeover's next step is the onboarding review quote.
+  - when: The confirmed path is care-takeover
+    to: ow-build-plan
+    verb: /ow-build-plan-quote --quick --onboarding
+    say: use ow-build-plan to quote onboarding on intake/<client>/intake-record.md
+    files:
+      - { path: intake/<client>/intake-record.md, fields: [mode, client, call_date, the bank's fields with confidence, open questions] }
+      - { path: intake/<client>/recap.md, fields: [path_id, path_label, path_kind, path_systems, send_by] }
+    if_unavailable: Scope and price the onboarding review by hand from the intake
+  # The logs (1.1.0).
+  - when: The agenda is ready
+    to: ow-start
+    verb: /ow-start-log-meeting
+    say: use ow-start to log the meeting logs/<workstream>/meetings/MTG-nn/
+    files:
+      - { path: logs/<workstream>/meetings/MTG-nn/agenda.md, fields: [items and their sources, attendees] }
+    if_unavailable: The agenda is a plain list; keep notes against it in the meeting
+  - when: A meeting recording exists and no transcript
+    to: ow-tools
+    verb: /ow-start-transcribe
+    say: use ow-tools to transcribe logs/<workstream>/meetings/MTG-nn/audio/
+    files: []
+    if_unavailable: "Save the meeting tool's transcript as logs/<workstream>/meetings/MTG-nn/transcript.md, or give your notes"
+  - when: The meeting is logged and its notes hold decisions
+    to: ow-start
+    verb: /ow-start-log-decision
+    say: use ow-start to log the decisions in logs/<workstream>/meetings/MTG-nn/notes.md
+    files:
+      - { path: logs/<workstream>/meetings/MTG-nn/notes.md, fields: [Decisions] }
+    if_unavailable: The decisions stay in notes.md; log each one later with /ow-start-log-decision

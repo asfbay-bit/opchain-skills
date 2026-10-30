@@ -1,0 +1,248 @@
+# ow-build-plan edges (ow- cross-talk contract R15), schema 1.
+# What this skill writes, reads and hands off, as data. The body's "Reads from"
+# and "Hands off to" tables say the same in words; check-skill-contracts reads
+# this file to hold the family to one writer per file and to edges that match
+# on both ends. Paths are relative to opchain-work/. Format: skills-work/README.md.
+schema: 1
+skill: ow-build-plan
+
+# The verb other skills hand files to ("use ow-build-plan on <path>"): its rules
+# live in the reference named here, which must cover every path below.
+routes:
+  verb: /ow-build-plan
+  reference: references/routing-and-resume.md
+  paths: [intake/<client>/intake-record.md, handoffs/<client>/fixes/FIX-nn.md, uat/<client>/defects/UAT-nn.md, plans/<client>/]
+
+writes:
+  - { path: plans/<client>/build-plan-offer.md, verb: /ow-build-plan-offer }
+  - { path: plans/<client>/request.md, verb: /ow-build-plan-offer }          # a follow-on stated in the user's words
+  - { path: plans/<client>/export/build-plan-offer.pdf, verb: /ow-build-plan-offer }
+  - { path: plans/<client>/export/build-plan-offer.docx, verb: /ow-build-plan-offer }
+  - { path: plans/<client>/plan.yaml, verb: /ow-build-plan-start }
+  - { path: plans/<client>/collection.md, verb: /ow-build-plan-start }
+  - { path: plans/<client>/evidence.md, verb: /ow-build-plan-collect }
+  - { path: plans/<client>/systems/<system>.md, verb: /ow-build-plan-collect }
+  - { path: plans/<client>/map/current.md, verb: /ow-build-plan-map }
+  - { path: plans/<client>/map/future.md, verb: /ow-build-plan-map }
+  - { path: plans/<client>/map/roles.md, verb: /ow-build-plan-map }
+  - { path: plans/<client>/map/systems.md, verb: /ow-build-plan-map }
+  - { path: plans/<client>/map/data.md, verb: /ow-build-plan-map }
+  - { path: plans/<client>/scope.md, verb: /ow-build-plan-scope }
+  - { path: plans/<client>/acceptance.md, verb: /ow-build-plan-scope }
+  - { path: plans/<client>/risks.md, verb: /ow-build-plan-scope }
+  - { path: plans/<client>/quick-scope.md, verb: /ow-build-plan-quote --quick }
+  # One writer verb in two modes: the full quote and the quick quote write the same files.
+  - { path: plans/<client>/quote.md, verb: /ow-build-plan-quote, modes: [--quick] }
+  - { path: plans/<client>/quote-items.json, verb: /ow-build-plan-quote, modes: [--quick] }
+  - { path: plans/<client>/contract-inputs.md, verb: /ow-build-plan-quote --accepted }
+  - { path: plans/<client>/build-request.md, verb: /ow-build-plan-quote --signed }
+  - { path: plans/<client>/build-plan.md, verb: /ow-build-plan-export }
+  - { path: plans/<client>/export/build-plan.pdf, verb: /ow-build-plan-export }
+  - { path: plans/<client>/export/build-plan.docx, verb: /ow-build-plan-export }
+  - { path: plans/<client>/export/quick-scope.pdf, verb: /ow-build-plan-export }
+  - { path: plans/<client>/export/quick-scope.docx, verb: /ow-build-plan-export }
+  - { path: plans/<client>/export/quote.pdf, verb: /ow-build-plan-export }
+  - { path: plans/<client>/export/quote.docx, verb: /ow-build-plan-export }
+  - { path: plans/<client>/export/export-report.md, verb: /ow-build-plan-export }
+  - { path: STATUS.md, verb: /ow-build-plan-offer, append: true }
+  - { path: STATUS.md, verb: /ow-build-plan-start, append: true }
+  - { path: STATUS.md, verb: /ow-build-plan-collect, append: true }
+  - { path: STATUS.md, verb: /ow-build-plan-map, append: true }
+  - { path: STATUS.md, verb: /ow-build-plan-scope, append: true }
+  - { path: STATUS.md, verb: /ow-build-plan-quote, append: true }
+  - { path: STATUS.md, verb: /ow-build-plan-export, append: true }
+
+reads:
+  # Upstream and workspace files (rows in the body's "Reads from" table).
+  - from: any
+    path: STATUS.md
+    fields: [the protocol's STATUS form]
+    if_absent: "First run: the welcome"
+    if_mismatch: Quote the lines as found; use only the dates and paths you can read
+  - from: ow-start
+    path: profile.md
+    shared: true
+    fields: [name, time_zone, holidays, handling]
+    if_absent: Ask the user's name and time zone; count business days with weekends only and say so
+    if_mismatch: Report the fields found; ask only for the missing ones
+  - from: ow-start
+    path: intake/<client>/intake-record.md
+    fields: [client, the bank's fields with confidence]
+    if_absent: Ask for the intake record or a short written request; nothing comes from memory
+    if_mismatch: Use the fields that parse; mark the rest UNKNOWN; say which
+  - from: ow-start
+    path: intake/<client>/recap.md
+    fields: [path_id, path_label, path_kind, path_systems]
+    if_absent: Ask the user for the tier and record it user-stated
+    if_mismatch: Report the header found; ask the user to confirm the tier
+  - from: ow-start
+    path: intake/<client>/coverage.md
+    fields: [must-ask statuses]
+    if_absent: Collection items come from the intake record alone
+    if_mismatch: Use the rows that parse
+  - from: ow-uat
+    path: uat/<client>/defects/UAT-nn.md
+    in_place: true      # owner decisions O1 and OD-1: ow-uat hands UAT-nn.md to ow-build, which hands it on in place ("use ow-build-plan on uat/<client>/defects/UAT-nn.md")
+    fields: [the request]
+    if_absent: Ask for the request in the user's words
+    if_mismatch: Quote what was found; ask the user to state the request
+  - from: ow-handoff
+    path: handoffs/<client>/fixes/FIX-nn.md
+    in_place: true   # OW-06 ruling O2: ow-handoff hands it to ow-build, which hands it on here in place
+    fields: [the request]
+    if_absent: Ask for the request in the user's words
+    if_mismatch: Quote what was found; ask the user to state the request
+  - from: user
+    path: price-book.yaml
+    fields: [the keys in references/price-book-schema.md]
+    if_absent: Stop before any price; ask the user to copy examples/price-book.yaml and fill in their own numbers
+    if_mismatch: List the keys found and missing; price nothing that needs a missing key
+  # Amendment P4 (1.3.0): a care request too big for care, handed over for a separate quick quote.
+  - from: ow-care
+    path: care/<client>/requests/CARE-nn.md
+    fields: [request, estimate, reason]
+    if_absent: Ask for the request in the user's words
+    if_mismatch: Ask for the missing scope before pricing
+  - from: user
+    path: offers.md
+    fields: [ownership, after_handoff.fix_window_days, contract_clauses]
+    if_absent: "Ownership text and fix window: ask and record user-stated; clauses: contract clauses: not set"
+    if_mismatch: Use what parses; ask for the rest
+  - from: user
+    path: handoffs.yaml
+    fields: [contract, build]
+    if_absent: Print the public default
+    if_mismatch: Print the public default and say the entry did not parse
+  - from: user
+    path: plans/<client>/inbox/
+    fields: [artefacts]
+    if_absent: Ask for them through the collection list
+    if_mismatch: Summarise unreadable files by name and size only
+  - from: ow-tools
+    path: plans/<client>/workshops/W<n>/transcript.md
+    fields: [speaker labels, times]
+    if_absent: Ask for a transcript or notes (MEDIUM cap)
+    if_mismatch: "No speaker labels: treat as notes"
+  # Amendment P5 (ow-research design §10; 1.1.0): research findings are a fourth evidence source.
+  - from: ow-research
+    path: research/<client>/RS-nn-<slug>/findings.md
+    fields: [Answer, F-nn, claim, level, sources, Gaps]
+    if_absent: No research rows; the other evidence sources stand
+    if_mismatch: Use the findings that parse; none from a topic whose self-checks have a FINDING open
+
+  # Its own earlier files (the body's last "Reads from" row; detail in each phase file).
+  - { from: ow-build-plan, path: plans/<client>/build-plan-offer.md, if_absent: "Take the tier from the recap, else ask", if_mismatch: "Report the fields found; ask the user to confirm the tier" }
+  - { from: ow-build-plan, path: plans/<client>/request.md, if_absent: "Ask for the request in the user's words", if_mismatch: "Quote what was found; ask the user to confirm the request" }
+  - { from: ow-build-plan, path: plans/<client>/plan.yaml, if_absent: "Say the schedule is missing; offer /ow-build-plan-start", if_mismatch: "Report the keys found; ask for the missing ones" }
+  - { from: ow-build-plan, path: plans/<client>/collection.md, if_absent: "Work from the intake alone and say so", if_mismatch: "Use the requests that parse" }
+  - { from: ow-build-plan, path: plans/<client>/evidence.md, if_absent: "Say the collection has not run; offer /ow-build-plan-collect", if_mismatch: "Use the rows that parse; facts citing other rows are FINDINGs" }
+  - { from: ow-build-plan, path: plans/<client>/systems/<system>.md, if_absent: "The system is described from artefacts and workshops only", if_mismatch: "Use what parses" }
+  - { from: ow-build-plan, path: plans/<client>/map/current.md, if_absent: "Say the map is missing; offer /ow-build-plan-map", if_mismatch: "Use the fact lines that parse; list the rest" }
+  - { from: ow-build-plan, path: plans/<client>/map/future.md, if_absent: "Say the map is missing; offer /ow-build-plan-map", if_mismatch: "Use the fact lines that parse; list the rest" }
+  - { from: ow-build-plan, path: plans/<client>/map/roles.md, if_absent: "Say the map is missing; offer /ow-build-plan-map", if_mismatch: "Use the fact lines that parse; list the rest" }
+  - { from: ow-build-plan, path: plans/<client>/map/systems.md, if_absent: "Say the map is missing; offer /ow-build-plan-map", if_mismatch: "Use the fact lines that parse; list the rest" }
+  - { from: ow-build-plan, path: plans/<client>/map/data.md, if_absent: "Say the map is missing; offer /ow-build-plan-map", if_mismatch: "Use the fact lines that parse; list the rest" }
+  - { from: ow-build-plan, path: plans/<client>/scope.md, if_absent: "Say the scope is missing; offer /ow-build-plan-scope", if_mismatch: "Report the sections found; price nothing unparsed" }
+  - { from: ow-build-plan, path: plans/<client>/acceptance.md, if_absent: "Say the checks are missing; offer /ow-build-plan-scope", if_mismatch: "Report the checks found" }
+  - { from: ow-build-plan, path: plans/<client>/risks.md, if_absent: "Say the risks are missing; offer /ow-build-plan-scope", if_mismatch: "Report the risks found" }
+  - { from: ow-build-plan, path: plans/<client>/quick-scope.md, if_absent: "Say the quick scope is missing; offer /ow-build-plan-quote --quick", if_mismatch: "Report the sections found" }
+  - { from: ow-build-plan, path: plans/<client>/quote.md, if_absent: "Say the quote is missing; offer /ow-build-plan-quote", if_mismatch: "Report the keys found; record nothing until the user confirms the quote" }
+  - { from: ow-build-plan, path: plans/<client>/build-plan.md, if_absent: "Say the plan was not assembled; offer /ow-build-plan-export", if_mismatch: "Report the sections found" }
+  - { from: ow-build-plan, path: plans/<client>/contract-inputs.md, if_absent: "Refuse the signing: record the acceptance first", if_mismatch: "Report the keys found; ask the user to confirm the acceptance" }
+
+hands_off:
+  # Amendment P4 (1.3.0): a signed onboarding review hands over to ow-care, not ow-build.
+  - when: Onboarding review signed
+    to: ow-care
+    verb: /ow-care-onboard
+    say: use ow-care to onboard plans/<client>/
+    files:
+      - { path: plans/<client>/quick-scope.md, fields: [eight review parts] }
+      - { path: plans/<client>/quote.md, fields: [mode, fixed_price, payment] }
+      - { path: plans/<client>/contract-inputs.md, fields: [accepted, payment] }
+      - { path: intake/<client>/intake-record.md, in_place: true, fields: [the bank's fields with confidence] }
+    if_unavailable: Run the review from quick-scope.md by hand and keep its findings; the quote alone starts no care plan
+  - when: Offer accepted
+    to: ow-build-plan
+    verb: /ow-build-plan-start
+    say: use ow-build-plan to start plans/<client>/
+    files: [plans/<client>/build-plan-offer.md, plans/<client>/request.md]
+    if_unavailable: The offer stands alone; agree the dates by hand
+  - when: Schedule set
+    to: ow-build-plan
+    verb: /ow-build-plan-collect
+    say: use ow-build-plan to collect for plans/<client>/
+    files: [plans/<client>/plan.yaml, plans/<client>/collection.md]
+    if_unavailable: Send the collection list; keep what arrives in inbox/
+  - when: Evidence in
+    to: ow-build-plan
+    verb: /ow-build-plan-map
+    say: use ow-build-plan to map plans/<client>/
+    files: [plans/<client>/evidence.md, plans/<client>/systems/<system>.md]
+    if_unavailable: The register stands alone
+  - when: Map done
+    to: ow-build-plan
+    verb: /ow-build-plan-scope
+    say: use ow-build-plan to scope plans/<client>/
+    files: [plans/<client>/map/current.md, plans/<client>/map/future.md, plans/<client>/map/roles.md, plans/<client>/map/systems.md, plans/<client>/map/data.md]
+    if_unavailable: The map stands alone
+  - when: Scope done
+    to: ow-build-plan
+    verb: /ow-build-plan-quote
+    say: use ow-build-plan to quote plans/<client>/
+    files: [plans/<client>/scope.md, plans/<client>/acceptance.md, plans/<client>/risks.md]
+    if_unavailable: The scope stands alone; price it by hand
+  - when: Quote ready
+    to: ow-build-plan
+    verb: /ow-build-plan-export
+    say: use ow-build-plan to export plans/<client>/
+    files: [plans/<client>/quote.md, plans/<client>/quick-scope.md]
+    if_unavailable: Send the quote without its header and without everything between the ow:internal markers
+  - when: Sent
+    to: ow-build-plan
+    verb: /ow-build-plan-quote --accepted
+    say: use ow-build-plan to record the acceptance on plans/<client>/
+    files: [plans/<client>/quote.md, plans/<client>/build-plan.md]
+    if_unavailable: Keep the client's reply with the quote
+  - when: Quick quote over the limit
+    to: ow-build-plan
+    verb: /ow-build-plan-offer
+    say: use ow-build-plan to write the offer for intake/<client>/intake-record.md
+    files: []
+    if_unavailable: Offer a Build Plan by hand, from the recap
+  - when: Accepted
+    destination: contract
+    files: [plans/<client>/contract-inputs.md]
+    if_unavailable: Send contract-inputs.md to whoever drafts your contracts, or fill your own SOW template from it
+  - when: Feasibility test signed, findings say go
+    to: ow-build-plan
+    verb: /ow-build-plan-offer
+    say: use ow-build-plan to write the offer for plans/<client>/
+    files: [plans/<client>/quick-scope.md, plans/<client>/contract-inputs.md]
+    if_unavailable: Offer a Build Plan by hand
+  - when: Accepted, then signed
+    to: ow-build-plan
+    verb: /ow-build-plan-quote --signed
+    say: use ow-build-plan to record the signing on plans/<client>/
+    files: [plans/<client>/contract-inputs.md]
+    if_unavailable: Keep the signed contract with contract-inputs.md
+  - when: Signed
+    to: ow-build
+    verb: /ow-build-start
+    say: use ow-build to start plans/<client>/
+    files:
+      - { path: plans/<client>/build-request.md, fields: [signed, signing_note, the milestones, client dependencies] }
+      - { path: plans/<client>/quote.md, fields: [mode, currency, fixed_price, schedule, payments, payment_terms_days, handling, the client part's milestones] }
+      - { path: plans/<client>/contract-inputs.md, fields: [documentation_sku, documentation_price] }
+      - { path: plans/<client>/plan.yaml, fields: [handling] }
+      - { path: plans/<client>/build-plan.md, fields: [Summary, What should change] }
+      - { path: plans/<client>/scope.md, fields: [work packages, out of scope, client dependencies] }
+      - { path: plans/<client>/acceptance.md, fields: [AC ids with when, then, how we check, test data, cases, kind] }
+      - { path: plans/<client>/risks.md, fields: [risks with owner and mitigation] }
+      - { path: plans/<client>/quick-scope.md, fields: [in scope, out of scope, acceptance checks] }
+      - { path: plans/<client>/map/systems.md, fields: [systems] }
+      - { path: plans/<client>/map/data.md, fields: [data] }
+      - { path: plans/<client>/map/future.md, fields: [future process] }
+      - { path: plans/<client>/map/roles.md, in_place: true }   # owner decision OD-1: handed on for ow-uat, which reads it in place
+      - { path: plans/<client>/evidence.md, in_place: true }   # OW-06 ruling O2: handed on for ow-handoff's access list (stage-02 grants), read in place
+    if_unavailable: "handoffs.yaml build: its say: line; with none, give build-request.md to whoever builds it"

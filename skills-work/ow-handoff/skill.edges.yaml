@@ -1,0 +1,293 @@
+# ow-handoff edges (ow- cross-talk contract R15), schema 1.
+# What this skill writes, reads and hands off, as data. The body's "Reads from"
+# and "Hands off to" tables say the same in words; the family's contract check reads
+# this file to hold the family to one writer per file and to edges that match
+# on both ends. Paths are relative to opchain-work/, except <repo>/…, the
+# client's project folder that build.yaml names. Nothing is written under <repo>/.
+# Format: skills-work/README.md.
+schema: 1
+skill: ow-handoff
+
+# The verb other skills hand the handoff's files to ("use ow-handoff on <path>", build ruling O1).
+routes:
+  verb: /ow-handoff
+  reference: references/routing-and-resume.md
+  paths: [uat/<client>/signoff.md, uat/<client>/punch-list.md, handoffs/<client>/]
+
+# The log only this skill writes, from every verb: name, kind, source and session of each value seen, never the value.
+append_logs: [handoffs/<client>/secrets-seen.log]
+
+writes:
+  # -start: the frozen copies and handoff.yaml (frozen: last); its two modes touch one file each.
+  - { path: handoffs/<client>/handoff.yaml, verb: /ow-handoff-start, modes: [--keep-frozen, --refreeze] }
+  - { path: handoffs/<client>/agreed/<file>, verb: /ow-handoff-start, modes: [--refreeze] }
+  - { path: handoffs/<client>/accounts.md, verb: /ow-handoff-accounts, modes: [--transfer, --check, --complete, --waive] }
+  - { path: handoffs/<client>/operator-notes.md, verb: /ow-handoff-notes, modes: [--walkthrough] }
+  # -package: the notes, their exports and the cover email; --revision after delivery.
+  - { path: handoffs/<client>/package.yaml, verb: /ow-handoff-package, modes: [--revision] }
+  - { path: handoffs/<client>/handoff-notes.md, verb: /ow-handoff-package, modes: [--revision] }
+  - { path: handoffs/<client>/export/handoff-notes.pdf, verb: /ow-handoff-package, modes: [--revision] }
+  - { path: handoffs/<client>/export/handoff-notes.docx, verb: /ow-handoff-package, modes: [--revision] }
+  - { path: handoffs/<client>/export/handoff-notes.export.json, verb: /ow-handoff-package, modes: [--revision] }
+  - { path: handoffs/<client>/export/handoff-notes.md, verb: /ow-handoff-package, modes: [--revision] }
+  - { path: handoffs/<client>/export/handoff-email.html, verb: /ow-handoff-package }
+  - { path: handoffs/<client>/export/handoff-email.txt, verb: /ow-handoff-package }
+  # -delivered: the window dates, once; the correction email only when a provisional date moved.
+  - { path: handoffs/<client>/dates.yaml, verb: /ow-handoff-delivered }
+  - { path: handoffs/<client>/export/window-correction-email.html, verb: /ow-handoff-delivered }
+  - { path: handoffs/<client>/export/window-correction-email.txt, verb: /ow-handoff-delivered }
+  # -fix, exact per mode.
+  - { path: handoffs/<client>/fixes/FIX-nn.md, verb: /ow-handoff-fix, modes: [--punch, --status, --waive] }
+  - { path: handoffs/<client>/help/HELP-nn.md, verb: /ow-handoff-fix --help, modes: [--go-ahead, --hours] }
+  - { path: handoffs/<client>/invoices/INV-request-help-nn.md, verb: /ow-handoff-fix --hours }
+  - { path: handoffs/<client>/invoices/INV-request-vendor-nn.md, verb: /ow-handoff-fix --vendor }
+  - { path: handoffs/<client>/co-windows.yaml, verb: /ow-handoff-fix, modes: [--windows, --punch, --status, --help, --go-ahead, --hours, --vendor, --waive] }
+  # -offer: the frozen terms, the choices, the client copy.
+  - { path: handoffs/<client>/after-offer.md, verb: /ow-handoff-offer, modes: [--rerun] }
+  - { path: handoffs/<client>/export/after-offer.html, verb: /ow-handoff-offer }
+  - { path: handoffs/<client>/access.md, verb: /ow-handoff-access, modes: [--record, --regrant, --waive] }
+  # -close: once; a close after reopening writes the addenda.
+  - { path: handoffs/<client>/close.md, verb: /ow-handoff-close }
+  - { path: handoffs/<client>/care-start.md, verb: /ow-handoff-close }
+  - { path: handoffs/<client>/export/close-email.html, verb: /ow-handoff-close }
+  - { path: handoffs/<client>/export/close-email.txt, verb: /ow-handoff-close }
+  - { path: handoffs/<client>/close-addendum-<date>.md, verb: /ow-handoff-close --reopened }
+  - { path: handoffs/<client>/care-start-addendum-<date>.md, verb: /ow-handoff-close --reopened }
+  - { path: handoffs/<client>/export/close-email-<date>.html, verb: /ow-handoff-close --reopened }
+  - { path: handoffs/<client>/export/close-email-<date>.txt, verb: /ow-handoff-close --reopened }
+  # The skill-local log and the shared STATUS.md.
+  - { path: handoffs/<client>/secrets-seen.log, verb: /ow-handoff-start, append: true }
+  - { path: handoffs/<client>/secrets-seen.log, verb: /ow-handoff-accounts, append: true }
+  - { path: handoffs/<client>/secrets-seen.log, verb: /ow-handoff-notes, append: true }
+  - { path: handoffs/<client>/secrets-seen.log, verb: /ow-handoff-package, append: true }
+  - { path: handoffs/<client>/secrets-seen.log, verb: /ow-handoff-delivered, append: true }
+  - { path: handoffs/<client>/secrets-seen.log, verb: /ow-handoff-fix, append: true }
+  - { path: handoffs/<client>/secrets-seen.log, verb: /ow-handoff-offer, append: true }
+  - { path: handoffs/<client>/secrets-seen.log, verb: /ow-handoff-access, append: true }
+  - { path: handoffs/<client>/secrets-seen.log, verb: /ow-handoff-close, append: true }
+  - { path: STATUS.md, verb: /ow-handoff-start, append: true }
+  - { path: STATUS.md, verb: /ow-handoff-accounts, append: true }
+  - { path: STATUS.md, verb: /ow-handoff-notes, append: true }
+  - { path: STATUS.md, verb: /ow-handoff-package, append: true }
+  - { path: STATUS.md, verb: /ow-handoff-delivered, append: true }
+  - { path: STATUS.md, verb: /ow-handoff-fix, append: true }
+  - { path: STATUS.md, verb: /ow-handoff-offer, append: true }
+  - { path: STATUS.md, verb: /ow-handoff-access, append: true }
+  - { path: STATUS.md, verb: /ow-handoff-close, append: true }
+
+reads:
+  - { from: any, path: STATUS.md, fields: [the protocol's STATUS form], if_absent: "First run: the welcome", if_mismatch: "Quote the lines as found; use only the dates and paths you can read" }
+  - { from: ow-start, path: profile.md, shared: true, fields: [time_zone, holidays], if_absent: "Count business days with weekends only, and say so", if_mismatch: "Report the fields found; ask only for the missing ones" }
+  # Handed directly by ow-uat's sign-off NEXT (fields a subset of what it offers; H1, H2).
+  - { from: ow-uat, path: uat/<client>/signoff.md, fields: [signed or deemed date, signer role, build label, post-acceptance change orders, test accounts], if_absent: "-start refuses: NEXT use ow-uat-signoff on uat/<client>/", if_mismatch: "Report what was found; write nothing until the user confirms the sign-off" }
+  - { from: ow-uat, path: uat/<client>/acceptance-record.md, fields: [each check, final result, cases passed, run and date, run_by, build label, cleared evidence], if_absent: "-start refuses: NEXT use ow-uat-signoff on uat/<client>/", if_mismatch: "Copy it unchanged; say which rows did not parse" }
+  - { from: ow-uat, path: uat/<client>/punch-list.md, fields: [each item, its UAT-nn, logged date], if_absent: "Nothing to log", if_mismatch: "Log the items that parse; list the rest" }
+  - { from: ow-uat, path: uat/<client>/agreed/scope.md, fields: [the agreed basis], if_absent: "A quick-quote job: quick-scope.md", if_mismatch: "Copy it unchanged; a newer upstream copy is a basis mismatch" }
+  - { from: ow-uat, path: uat/<client>/agreed/acceptance.md, fields: [the agreed checks], if_absent: "A quick-quote job: quick-scope.md's checks", if_mismatch: "Copy it unchanged; a newer upstream copy is a basis mismatch" }
+  - { from: ow-uat, path: uat/<client>/agreed/quick-scope.md, fields: [the agreed basis], if_absent: "A full plan: scope.md and acceptance.md", if_mismatch: "Copy it unchanged; a newer upstream copy is a basis mismatch" }
+  - { from: ow-uat, path: uat/<client>/agreed/CO-nn.md, fields: [the change orders in the acceptance], if_absent: "No change order in the acceptance", if_mismatch: "Copy it unchanged; a newer upstream copy is a basis mismatch" }
+  - { from: ow-uat, path: uat/<client>/agreed/contract-terms.md, fields: [included, ownership terms], if_absent: "The included block and ownership terms from the user, user-stated", if_mismatch: "Copy it unchanged; a newer upstream copy is a basis mismatch" }
+  - { from: ow-uat, path: uat/<client>/acceptance-addendum-CO-nn.md, fields: [checks, results, confirmation date], if_absent: "That CO is not accepted: reports against it go to ow-uat", if_mismatch: "Ask the user for the confirmation date; no co-windows row until it parses" }
+  - { from: ow-uat, path: uat/<client>/secrets-seen.log, fields: [kind, role, source, session], if_absent: "Nothing to add", if_mismatch: "Use the lines that parse; list the rest as items to ask about" }
+  - { from: ow-uat, path: uat/<client>/evidence/index.md, fields: [item, state, cleared], if_absent: "Nothing to list", if_mismatch: "Anything not cleared goes on the local-copy list" }
+  - { from: ow-uat, path: uat/<client>/uat.yaml, fields: [the governing acceptance or delivery definition, dated], if_absent: "Delivery is the day the Handoff notes are delivered", if_mismatch: "Ask the user which definition governs" }
+  # Handed directly by ow-documentation (H3; O6 edit 2 adds its secrets log).
+  - { from: ow-documentation, path: docs/<client>/runbook.md, fields: [OP-nn ids and titles], if_absent: "The line declined or not delivered: the floor, or wait (phase-notes.md)", if_mismatch: "Index the entries that parse; never renumber one" }
+  - { from: ow-documentation, path: docs/<client>/delivered.md, fields: [the delivery date], if_absent: "The line bought: -notes and -package wait for it", if_mismatch: "Ask the user for the delivery date; record it user-stated" }
+  - { from: ow-documentation, path: docs/<client>/docs.yaml, fields: [planned_delivery, capture_profile], if_absent: "No capture profile to remove; no planned delivery to show", if_mismatch: "Ask the user for the profile's name" }
+  - { from: ow-documentation, path: docs/<client>/deliveries.yaml, fields: [the handover path used, its files], if_absent: "Takeover reads the repository as the floor does", if_mismatch: "Cite the default handover path only if it exists in the repository; say so" }
+  - { from: ow-documentation, path: docs/<client>/adoption.md, fields: [open gaps by role], if_absent: "No gaps to log", if_mismatch: "Ask the user for the request in the client's words" }
+  - { from: ow-documentation, path: docs/<client>/secrets-seen.log, fields: [kind, role, source, session], if_absent: "Nothing to add", if_mismatch: "Use the lines that parse; list the rest as items to ask about" }
+  # Read in place where their producers left them, carried at every hop (OD-1, build ruling O2). Never a priced key.
+  - { from: ow-build-plan, path: plans/<client>/contract-inputs.md, in_place: true, fields: [fix_window_days, payment due days, payment schedule, documentation_sku], if_absent: "Next in the chain: quote.md, then offers.md, then ask", if_mismatch: "Ask the user; record the answer user-stated" }
+  - { from: ow-build-plan, path: plans/<client>/quote.md, in_place: true, fields: [the client part's included block, vendors], if_absent: "offers.md defaults the user confirms; vendors from the user", if_mismatch: "Read the client part only; ask for the rest" }
+  - { from: ow-build-plan, path: plans/<client>/map/systems.md, in_place: true, fields: [systems, integrations, owners], if_absent: "Built without a systems map: the completeness prompt", if_mismatch: "Use the rows that parse; the rest from the user" }
+  - { from: ow-build-plan, path: plans/<client>/evidence.md, in_place: true, fields: [stage-02 access grants], if_absent: "Say so; ask the user to list the stage-02 grants", if_mismatch: "List the grants that parse; ask about the rest" }
+  - { from: ow-build, path: builds/<client>/build.yaml, in_place: true, fields: [builder.repo], if_absent: "Ask the user where the client's repository is", if_mismatch: "Ask the user to confirm the repository path" }
+  - { from: ow-build, path: builds/<client>/ledger.md, in_place: true, fields: [the delivery payment's state], if_absent: "Payment status not recorded; the delivery-payment NEXT prints", if_mismatch: "Ask the user whether the delivery half was invoiced" }
+  - { from: ow-build, path: builds/<client>/changes/CO-nn.md, in_place: true, fields: [id, kind, status, signed, adds_checks], if_absent: "No post-acceptance change orders", if_mismatch: "Unsigned or declined: not in scope" }
+  # The user's own files, and the raw material listed by name only, never opened (access source 4).
+  - { from: user, path: offers.md, fields: [after_handoff], if_absent: "No offer: undecided; ask for the lead and the window", if_mismatch: "Use the keys that parse; ask for the rest" }
+  - { from: user, path: handoffs.yaml, fields: [build, invoice], if_absent: "The public defaults", if_mismatch: "Print the public default and say the entry did not parse" }
+  - { from: user, path: brand.yaml, fields: [name, colors, footer, logo], if_absent: "Neutral styling", if_mismatch: "Neutral styling for the rest" }
+  - { from: user, path: <repo>/, fields: [README, docs, CI config, alert and run-log setup, .env.example and the config schema by name], if_absent: "Ask; a missing item is a takeover FINDING, never an invented command", if_mismatch: "Cite only what is there; a symlink out is reported, never followed" }
+  - { from: user, path: intake/<client>/audio/, fields: [file names], if_absent: "Nothing to list", if_mismatch: "List what is there by name" }
+  - { from: user, path: plans/<client>/audio/, fields: [file names], if_absent: "Nothing to list", if_mismatch: "List what is there by name" }
+  - { from: user, path: plans/<client>/workshops/W<n>/audio/, fields: [file names], if_absent: "Nothing to list", if_mismatch: "List what is there by name" }
+  - { from: user, path: builds/<client>/audio/, fields: [file names], if_absent: "Nothing to list", if_mismatch: "List what is there by name" }
+  - { from: user, path: plans/<client>/inbox/, fields: [file names], if_absent: "Nothing to list", if_mismatch: "List what is there by name" }
+  - { from: user, path: logs/<workstream>/meetings/MTG-nn/audio/, fields: [file names, the client's workstream only], if_absent: "Nothing to list", if_mismatch: "List what is there by name; never logs/business/" }
+  - { from: user, path: docs/<client>/inbox/, fields: [file names], if_absent: "Nothing to list", if_mismatch: "List what is there by name" }
+  - { from: user, path: uat/<client>/evidence/, fields: [imported results file names], if_absent: "Nothing to list", if_mismatch: "List what is there by name" }
+  - { from: ow-tools, path: intake/<client>/transcript.md, fields: [file name], if_absent: "Nothing to list", if_mismatch: "List it by name" }
+  - { from: ow-tools, path: plans/<client>/workshops/W<n>/transcript.md, fields: [file name], if_absent: "Nothing to list", if_mismatch: "List it by name" }
+  - { from: ow-tools, path: logs/<workstream>/meetings/MTG-nn/transcript.md, fields: [file name], if_absent: "Nothing to list", if_mismatch: "List it by name" }
+  # Its own earlier files (detail in each phase file).
+  - { from: ow-handoff, path: handoffs/<client>/handoff.yaml, if_absent: "Every verb but -start refuses: NEXT use ow-handoff-start on uat/<client>/", if_mismatch: "Report the keys found; resume at the first start step not recorded" }
+  - { from: ow-handoff, path: handoffs/<client>/accounts.md, if_absent: "-notes and -package refuse: NEXT -accounts", if_mismatch: "Report the sections found" }
+  - { from: ow-handoff, path: handoffs/<client>/operator-notes.md, if_absent: "-package refuses: NEXT -notes", if_mismatch: "Report the entries found" }
+  - { from: ow-handoff, path: handoffs/<client>/package.yaml, if_absent: "-delivered refuses; or delivery + N with no correction email", if_mismatch: "Report the keys found" }
+  - { from: ow-handoff, path: handoffs/<client>/dates.yaml, if_absent: "Before delivery: provisional dates; every main-basis report is inside the window", if_mismatch: "Ask the user; never rewrite it" }
+  - { from: ow-handoff, path: handoffs/<client>/co-windows.yaml, if_absent: "No post-acceptance CO window yet", if_mismatch: "Use the rows that parse; never edit one" }
+  - { from: ow-handoff, path: handoffs/<client>/fixes/FIX-nn.md, if_absent: "No fixes", if_mismatch: "Report the header found" }
+  - { from: ow-handoff, path: handoffs/<client>/help/HELP-nn.md, if_absent: "No hourly help", if_mismatch: "Report the header found" }
+  - { from: ow-handoff, path: handoffs/<client>/after-offer.md, if_absent: "No offer yet: offers.md's terms, each checked", if_mismatch: "Report the sections found; never recompute a term" }
+  - { from: ow-handoff, path: handoffs/<client>/access.md, if_absent: "-close refuses: NEXT -access", if_mismatch: "Report the items found" }
+  - { from: ow-handoff, path: handoffs/<client>/close.md, if_absent: "Not closed", if_mismatch: "Report what was found; never rewrite it" }
+  - { from: ow-handoff, path: handoffs/<client>/secrets-seen.log, if_absent: "Nothing to add", if_mismatch: "Use the lines that parse" }
+
+hands_off:
+  # ow-handoff's own steps.
+  - when: No handoff.yaml (any verb but -start)
+    to: ow-handoff
+    verb: /ow-handoff-start
+    say: use ow-handoff-start on uat/<client>/
+    files: []
+    if_unavailable: signoff.md, acceptance-record.md and agreed/ in uat/<client>/ hold what the handoff needs
+  - when: Started
+    to: ow-handoff
+    verb: /ow-handoff-accounts
+    say: use ow-handoff-accounts on handoffs/<client>/
+    files: [handoffs/<client>/handoff.yaml]
+    if_unavailable: List each account and who owns it by hand
+  - when: Started, with punch-list items
+    to: ow-handoff
+    verb: /ow-handoff-fix --punch
+    say: use ow-handoff-fix on uat/<client>/punch-list.md
+    files:
+      - { path: uat/<client>/punch-list.md, in_place: true }
+    if_unavailable: Log each punch-list item as a covered fix by hand
+  - when: A basis mismatch, kept
+    to: ow-handoff
+    verb: /ow-handoff-start --keep-frozen
+    say: use ow-handoff-start --keep-frozen on handoffs/<client>/
+    files: [handoffs/<client>/handoff.yaml]
+    if_unavailable: Keep the frozen copy and note the date by hand
+  - when: A basis mismatch, refrozen
+    to: ow-handoff
+    verb: /ow-handoff-start --refreeze
+    say: use ow-handoff-start --refreeze on handoffs/<client>/
+    files: [handoffs/<client>/handoff.yaml]
+    if_unavailable: Copy that one file again by hand, with a dated note
+  - when: Accounts
+    to: ow-handoff
+    verb: /ow-handoff-notes
+    say: use ow-handoff-notes on handoffs/<client>/
+    files: [handoffs/<client>/accounts.md]
+    if_unavailable: Write the operator notes by hand from the four sources
+  - when: Notes
+    to: ow-handoff
+    verb: /ow-handoff-package
+    say: use ow-handoff-package on handoffs/<client>/
+    files: [handoffs/<client>/accounts.md, handoffs/<client>/operator-notes.md]
+    if_unavailable: Assemble the six sections by hand
+  - when: Packaged
+    to: ow-handoff
+    verb: /ow-handoff-delivered
+    say: use ow-handoff-delivered on handoffs/<client>/
+    files: [handoffs/<client>/package.yaml]
+    if_unavailable: Keep a dated note of the day the notes were sent
+  - when: Delivered; a report; a coverage or takeover FINDING; a new addendum
+    to: ow-handoff
+    verb: /ow-handoff-fix
+    say: use ow-handoff-fix on handoffs/<client>/
+    files: [handoffs/<client>/dates.yaml]
+    if_unavailable: Log each report by hand against the agreed checks
+  - when: Delivered
+    to: ow-handoff
+    verb: /ow-handoff-offer
+    say: use ow-handoff-offer on handoffs/<client>/
+    files: [handoffs/<client>/dates.yaml]
+    if_unavailable: Send the three options from offers.md by hand
+  - when: Offer made
+    to: ow-handoff
+    verb: /ow-handoff-access
+    say: use ow-handoff-access on handoffs/<client>/
+    files: [handoffs/<client>/after-offer.md, handoffs/<client>/accounts.md]
+    if_unavailable: List the access to remove by hand from the five sources
+  - when: Access listed; the window ended
+    to: ow-handoff
+    verb: /ow-handoff-close
+    say: use ow-handoff-close on handoffs/<client>/
+    files: [handoffs/<client>/access.md, handoffs/<client>/dates.yaml]
+    if_unavailable: Check each blocker by hand before you close
+  # ow-uat: the sign-off, and a post-acceptance CO with no addendum (dates.yaml carried in place for its backstop read, O3).
+  - when: No signoff.md or acceptance-record.md at -start
+    to: ow-uat
+    verb: /ow-uat-signoff
+    say: use ow-uat-signoff on uat/<client>/
+    files: []
+    if_unavailable: Finish acceptance testing first
+  - when: A report against a post-acceptance CO with no addendum
+    to: ow-uat
+    verb: /ow-uat-plan --addendum
+    say: use ow-uat-plan to write the addendum for CO-nn in uat/<client>/
+    files:
+      - { path: handoffs/<client>/dates.yaml, fields: [handoff_date] }
+    if_unavailable: That CO is not accepted yet; test it before logging anything against it
+  - when: A report against a post-acceptance CO whose addendum scenarios exist
+    to: ow-uat
+    verb: /ow-uat-defect
+    say: use ow-uat-defect on uat/<client>/
+    files:
+      - { path: handoffs/<client>/dates.yaml, fields: [handoff_date] }
+    if_unavailable: Log it against the CO's addendum check by hand
+  # ow-documentation: the line bought (H3), and its rollout alongside the window (O3; O6 edit 1).
+  - when: The line bought, the documents not delivered, at -notes or -package
+    to: ow-documentation
+    verb: /ow-documentation-delivered
+    say: use ow-documentation-delivered on docs/<client>/
+    files: []
+    if_unavailable: Deliver the documents by hand and record the date, user-stated, in handoff.yaml
+  - when: Delivered, the line bought
+    to: ow-documentation
+    verb: /ow-documentation-rollout
+    say: use ow-documentation-rollout on docs/<client>/
+    files:
+      - { path: handoffs/<client>/dates.yaml, fields: [window_end] }
+      - { path: handoffs/<client>/operator-notes.md, fields: [ops] }
+    if_unavailable: Run the check-ins by hand alongside the fix window
+  # ow-build: the delivery payment (smaller projects) and a paid change.
+  - when: Delivered, smaller project, the delivery half not invoiced
+    to: ow-build
+    verb: /ow-build-invoice
+    say: use ow-build to invoice the delivery payment
+    files:
+      - { path: handoffs/<client>/dates.yaml, fields: [handoff_date] }
+    if_unavailable: Invoice the delivery half once, by hand, from dates.yaml
+  - when: A Change or After the window, not routed to care
+    to: ow-build
+    verb: /ow-build-change
+    say: use ow-build to price the change from handoffs/<client>/fixes/FIX-nn.md
+    files:
+      - { path: handoffs/<client>/fixes/FIX-nn.md, fields: [class, reported, the request, route] }
+    if_unavailable: Price the change by hand and get it signed before any work
+  # ow-care (planned, built later): what its design §5.1 reads.
+  - when: Closed, care chosen
+    to: ow-care
+    verb: /ow-care   # the routing verb: "use ow-care on <path>" lands there and routes to /ow-care-start
+    say: use ow-care on handoffs/<client>/care-start.md
+    files:
+      - { path: handoffs/<client>/care-start.md, fields: [care_start, kept access with removal steps, carried fixes, waiting route care requests] }
+      - { path: handoffs/<client>/care-start-addendum-<date>.md, fields: [care_start, kept access with removal steps, carried fixes, waiting route care requests] }
+      - { path: handoffs/<client>/after-offer.md, fields: [every frozen term, choice] }
+      - { path: handoffs/<client>/operator-notes.md, fields: [OP-nn entries] }
+      - { path: handoffs/<client>/accounts.md, fields: [account rows by role] }
+      - { path: handoffs/<client>/dates.yaml, fields: [window_end] }
+    if_unavailable: The kept items stay with you; review them by the date in STATUS
+  - when: A Change after close, route care
+    to: ow-care
+    verb: /ow-care   # the routing verb: routes a `route: care` FIX to /ow-care-request
+    say: use ow-care on handoffs/<client>/fixes/FIX-nn.md
+    files:
+      - { path: handoffs/<client>/fixes/FIX-nn.md, fields: [class, reported, route, the request] }
+    if_unavailable: Price it as a change instead
+  # Work leaving the family: handoffs.yaml.
+  - when: A covered fix; approved hourly help
+    destination: build
+    files: [handoffs/<client>/fixes/FIX-nn.md, handoffs/<client>/help/HELP-nn.md]
+    if_unavailable: Give the file to whoever builds it
+  - when: Hours recorded; vendor charges
+    destination: invoice
+    files: [handoffs/<client>/invoices/INV-request-help-nn.md, handoffs/<client>/invoices/INV-request-vendor-nn.md]
+    if_unavailable: Create this invoice in your invoicing tool

@@ -1,0 +1,12 @@
+[project]
+name = "ow-tools-diarize"
+version = "1.0.0"
+description = "ow-tools speaker separation: a WAV in, speaker turns JSON out. Runs offline after setup."
+requires-python = "==3.12.*"
+license = "Apache-2.0"
+dependencies = [
+  "pyannote.audio==4.0.7",
+]
+
+[tool.uv]
+package = false

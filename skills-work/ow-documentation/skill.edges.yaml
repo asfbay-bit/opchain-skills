@@ -1,0 +1,328 @@
+# ow-documentation edges (ow- cross-talk contract R15), schema 1.
+# What this skill writes, reads and hands off, as data. The body's "Reads from"
+# and "Hands off to" tables say the same in words; the family's contract check reads
+# this file to hold the family to one writer per file and to edges that match
+# on both ends. Paths are relative to opchain-work/, except <repo>/…, the
+# client's project folder that build.yaml names. Format: skills-work/README.md.
+schema: 1
+skill: ow-documentation
+
+# The verb other skills hand the documentation folder to ("use ow-documentation on <path>",
+# owner decision O1): its rules live in the reference named here.
+routes:
+  verb: /ow-documentation
+  reference: references/routing-and-resume.md
+  paths: [docs/<client>/]
+
+# A log only this skill writes, from every verb (as ow-uat's is): kind, role, source and
+# session of each credential seen, never the value.
+append_logs: [docs/<client>/secrets-seen.log]
+
+writes:
+  # -start: the frozen scope and the confirmed plan (plan.md last).
+  - { path: docs/<client>/docs.yaml, verb: /ow-documentation-start }
+  - { path: docs/<client>/plan.md, verb: /ow-documentation-start }
+  # -capture: the ow-tools plan, the images the tool writes at its call, and the index (git-ignored images, tracked index).
+  - { path: docs/<client>/capture-plan.json, verb: /ow-documentation-capture }
+  - { path: docs/<client>/capture-plan-nn.json, verb: /ow-documentation-capture }
+  - { path: docs/<client>/shots/index.md, verb: /ow-documentation-capture }
+  - { path: docs/<client>/shots/<id>.png, verb: /ow-documentation-capture }
+  # -write, exact per document type.
+  - { path: docs/<client>/guides/<role>.md, verb: /ow-documentation-write guides }
+  - { path: docs/<client>/sops/SOP-nn.md, verb: /ow-documentation-write sops }
+  - { path: docs/<client>/runbook.md, verb: /ow-documentation-write runbook }
+  - { path: docs/<client>/handover/<file>.md, verb: /ow-documentation-write handover }
+  # -train, exact per training format.
+  - { path: docs/<client>/training/deck.md, verb: /ow-documentation-train deck }
+  - { path: docs/<client>/training/facilitator.md, verb: /ow-documentation-train facilitator }
+  - { path: docs/<client>/training/modules/M-nn.md, verb: /ow-documentation-train modules }
+  - { path: docs/<client>/training/cards/<role>.md, verb: /ow-documentation-train cards }
+  - { path: docs/<client>/training/videos/V-nn.md, verb: /ow-documentation-train videos }
+  # -export: the exports in per-type subfolders (an update after delivery: export/update-nn/), the repo
+  # copy in the folders handoffs.yaml `docs` names (defaults shown), and what went where.
+  - { path: docs/<client>/export/<type>/<file>.pdf, verb: /ow-documentation-export }
+  - { path: docs/<client>/export/<type>/<file>.docx, verb: /ow-documentation-export }
+  - { path: docs/<client>/export/<type>/<file>.pptx, verb: /ow-documentation-export }
+  - { path: docs/<client>/export/<type>/<file>.export.json, verb: /ow-documentation-export }
+  - { path: docs/<client>/export/markdown/<type>/<file>.md, verb: /ow-documentation-export }
+  - { path: <repo>/docs/client-handbook/<file>.md, verb: /ow-documentation-export }
+  - { path: <repo>/docs/handover/<file>.md, verb: /ow-documentation-export }
+  - { path: docs/<client>/deliveries.yaml, verb: /ow-documentation-export }
+  # -delivered: written once; a later delivery of updated documents is its own file (owner decision O7).
+  - { path: docs/<client>/delivered.md, verb: /ow-documentation-delivered }
+  - { path: docs/<client>/delivered-update-nn.md, verb: /ow-documentation-delivered --update }
+  # -rollout, exact per mode.
+  - { path: docs/<client>/rollout.yaml, verb: /ow-documentation-rollout, modes: [--session, --add-group, --close] }
+  - { path: docs/<client>/training-record.md, verb: /ow-documentation-rollout --session }
+  - { path: docs/<client>/adoption.md, verb: /ow-documentation-rollout --checkin, modes: [--close] }
+  # The skill-local log (append_logs above) and the shared STATUS.md.
+  - { path: docs/<client>/secrets-seen.log, verb: /ow-documentation-start, append: true }
+  - { path: docs/<client>/secrets-seen.log, verb: /ow-documentation-capture, append: true }
+  - { path: docs/<client>/secrets-seen.log, verb: /ow-documentation-write, append: true }
+  - { path: docs/<client>/secrets-seen.log, verb: /ow-documentation-train, append: true }
+  - { path: docs/<client>/secrets-seen.log, verb: /ow-documentation-export, append: true }
+  - { path: docs/<client>/secrets-seen.log, verb: /ow-documentation-delivered, append: true }
+  - { path: docs/<client>/secrets-seen.log, verb: /ow-documentation-rollout, append: true }
+  - { path: STATUS.md, verb: /ow-documentation-start, append: true }
+  - { path: STATUS.md, verb: /ow-documentation-capture, append: true }
+  - { path: STATUS.md, verb: /ow-documentation-write, append: true }
+  - { path: STATUS.md, verb: /ow-documentation-train, append: true }
+  - { path: STATUS.md, verb: /ow-documentation-export, append: true }
+  - { path: STATUS.md, verb: /ow-documentation-delivered, append: true }
+  - { path: STATUS.md, verb: /ow-documentation-rollout, append: true }
+
+reads:
+  - from: any
+    path: STATUS.md
+    fields: [the protocol's STATUS form]
+    if_absent: "First run: the welcome"
+    if_mismatch: Quote the lines as found; use only the dates and paths you can read
+  - from: ow-start
+    path: profile.md
+    shared: true
+    fields: [name, time_zone, holidays, handling]
+    if_absent: Count dates with weekends only, and say so
+    if_mismatch: Report the fields found; ask only for the missing ones
+  # Handed over directly by ow-uat's sign-off NEXT (its fields are a subset of what ow-uat offers).
+  - from: ow-uat
+    path: uat/<client>/signoff.md
+    fields: [signed or deemed date]
+    if_absent: "-start refuses: NEXT use ow-uat-signoff"
+    if_mismatch: Report what was found; write nothing until the user confirms the sign-off date
+  - from: ow-uat
+    path: uat/<client>/uat.yaml
+    fields: [roles, tester ids, environment, test data]
+    if_absent: Ask the user for the roles, their ids and the test environment
+    if_mismatch: Use the keys that parse; ask for the rest
+  - from: ow-uat
+    path: uat/<client>/scenarios/SC-nn.md
+    fields: [role, steps, expected result, data pointers]
+    if_absent: Ask the user for each role's main tasks; the guides cite the user's words, user-stated
+    if_mismatch: Use the scenarios that parse; list the rest
+  - from: ow-uat
+    path: uat/<client>/defects/UAT-nn.md
+    fields: [class, Training gap topic]
+    if_absent: "No training gaps: nothing extra"
+    if_mismatch: Use the class line as written; ask about any UAT-nn whose class does not parse
+  - from: ow-uat
+    path: uat/<client>/evidence/index.md
+    fields: [cleared items]
+    if_absent: Capture, or placeholders
+    if_mismatch: "Anything not cleared is never used"
+  # The signed plan, read where ow-build-plan left it (owner decisions O1 and OD-1, and O2 of this skill's build):
+  # ow-build-plan hands it to ow-build, which hands it to ow-uat, which hands it on here, each hop in place.
+  - from: ow-build-plan
+    path: plans/<client>/contract-inputs.md
+    in_place: true
+    fields: [documentation_sku, documentation_people, uat.size]
+    if_absent: Ask whether the line was bought and how many people; record the answers user-stated
+    if_mismatch: "declined: -start stops; a key absent: ask once and record it user-stated"
+  - from: ow-build-plan
+    path: plans/<client>/scope.md
+    in_place: true
+    fields: [work packages, out of scope]
+    if_absent: "A quick-quote job reads quick-scope.md"
+    if_mismatch: Use the sections that parse
+  - from: ow-build-plan
+    path: plans/<client>/quick-scope.md
+    in_place: true
+    fields: [in scope, out of scope]
+    if_absent: "A full plan reads scope.md"
+    if_mismatch: Use the sections that parse
+  - from: ow-build-plan
+    path: plans/<client>/map/roles.md
+    in_place: true
+    fields: [roles]
+    if_absent: "Roles from uat.yaml's testers; a quick-quote job asks the user"
+    if_mismatch: Use the rows that parse; ask for the rest
+  - from: ow-build-plan
+    path: plans/<client>/map/future.md
+    in_place: true
+    fields: [the new process, item by item]
+    if_absent: "A quick-quote job: SOPs from scope.md and the user, user-stated"
+    if_mismatch: Use the items that parse
+  # The build, read where ow-build left it (ow-build hands it to ow-uat, which hands it on here, in place).
+  - from: ow-build
+    path: builds/<client>/build.yaml
+    in_place: true
+    fields: [builder.repo, milestones]
+    if_absent: Ask the user where the client's repository is
+    if_mismatch: Ask the user to confirm the repository path
+  - from: ow-build
+    path: builds/<client>/ledger.md
+    in_place: true
+    fields: [the documentation line's state]
+    if_absent: "Not requested: -delivered prints the invoice NEXT"
+    if_mismatch: Ask the user whether the documentation line was invoiced
+  - from: ow-build
+    path: builds/<client>/changes/CO-nn.md
+    in_place: true
+    fields: [id, kind, status, adds_checks]
+    if_absent: "No change orders: the plan is the basis; --add-group refuses"
+    if_mismatch: "Unsigned or declined: not used; --add-group refuses"
+  - from: ow-build
+    path: <repo>/spec/02-architecture.md
+    in_place: true
+    fields: [architecture]
+    if_absent: The handover's architecture comes from the repository and the user; say so
+    if_mismatch: Use the sections that parse
+  - from: ow-build
+    path: <repo>/spec/04-integrations.md
+    in_place: true
+    fields: [integrations]
+    if_absent: Vendor-side settings come from the user, cited user-confirmed with the date
+    if_mismatch: Use the sections that parse
+  - from: ow-build
+    path: <repo>/spec/scope-and-milestones.md
+    in_place: true
+    fields: [milestones, out of scope, risks]
+    if_absent: Known limits from scope.md and the user
+    if_mismatch: Use the sections that parse
+  # ow-handoff's dates (planned; its design's dates.yaml): the window end for --close.
+  - from: ow-handoff
+    path: handoffs/<client>/dates.yaml
+    in_place: true
+    fields: [window_end]
+    if_absent: "--close at day 30, and say no window end was found"
+    if_mismatch: Ask the user for the fix window's end date
+  - { from: ow-handoff, path: handoffs/<client>/operator-notes.md, fields: [ops], if_absent: "No handoff notes yet: the next id after the runbook's own ops:", if_mismatch: "Take the next id after the highest that parses in either file; say which ids could not be read" }
+  # The user's own files and what the user brings.
+  - from: user
+    path: handoffs.yaml
+    fields: [docs]
+    if_absent: Files only; print the public default
+    if_mismatch: Print the public default and say the entry did not parse
+  - from: user
+    path: brand.yaml
+    fields: [name, colors, footer, logo, logo_alt]
+    if_absent: Neutral styling, and say so
+    if_mismatch: Use the keys that parse; neutral styling for the rest
+  - from: user
+    path: <repo>/
+    fields: [README, docs, CI config, alert and run-log setup, test and deploy commands]
+    if_absent: Ask the user; anything not found is an open item, never an invented command
+    if_mismatch: Cite only what the files hold; the rest is an open item
+  - from: user
+    path: <repo>/sprints/
+    fields: [sprint-N/contract.md decisions]
+    if_absent: Decisions from the plan and the change orders only; say so
+    if_mismatch: Use what parses; record nothing the files do not say
+  - from: user
+    path: docs/<client>/inbox/<file>
+    fields: [a filled attendance sheet, a check-in report]
+    if_absent: Record what the user reads out, labelled user-stated
+    if_mismatch: Import the rows that parse; drop name, email and phone columns and say so; never guess
+
+  # Its own earlier files (detail in each phase file).
+  - { from: ow-documentation, path: docs/<client>/docs.yaml, if_absent: "Every verb except -start refuses: NEXT use ow-documentation-start on uat/<client>/", if_mismatch: "Report the keys found; resume at the first start step not recorded" }
+  - { from: ow-documentation, path: docs/<client>/plan.md, if_absent: "-start resumes at its plan step", if_mismatch: "Report the sections found; write nothing until -start's plan step is done" }
+  - { from: ow-documentation, path: docs/<client>/shots/index.md, if_absent: "No capture yet: placeholders", if_mismatch: "Use only rows that parse and are cleared" }
+  - { from: ow-documentation, path: docs/<client>/guides/<role>.md, if_absent: "-write guides has not run: -train waits for it", if_mismatch: "Use the task sections that parse" }
+  - { from: ow-documentation, path: docs/<client>/deliveries.yaml, if_absent: "Nothing exported: -delivered refuses", if_mismatch: "Report the rows found; resume at the first export step not recorded" }
+  - { from: ow-documentation, path: docs/<client>/delivered.md, if_absent: "Not delivered yet", if_mismatch: "Report what was found; write nothing" }
+  - { from: ow-documentation, path: docs/<client>/rollout.yaml, if_absent: "No rollout planned yet", if_mismatch: "Report the rows found; ask before recording anything" }
+  - { from: ow-documentation, path: docs/<client>/adoption.md, if_absent: "No check-in yet", if_mismatch: "Report the sections found" }
+  - { from: ow-documentation, path: docs/<client>/runbook.md, if_absent: "-write runbook has not run", if_mismatch: "Report the entries that parse; never renumber one" }
+
+hands_off:
+  # ow-documentation's own steps.
+  - when: No docs.yaml (any verb but -start)
+    to: ow-documentation
+    verb: /ow-documentation-start
+    say: use ow-documentation-start on uat/<client>/
+    files: []
+    if_unavailable: The scenarios, training gaps and cleared evidence stay in uat/<client>/ for later
+  - when: Started
+    to: ow-documentation
+    verb: /ow-documentation-capture
+    say: use ow-documentation-capture on docs/<client>/
+    files: [docs/<client>/docs.yaml, docs/<client>/plan.md]
+    if_unavailable: Use UAT's cleared screenshots where they fit; mark every other step with a placeholder
+  - when: Captured, a document type left, or a new training gap before day 30
+    to: ow-documentation
+    verb: /ow-documentation-write
+    say: use ow-documentation-write on docs/<client>/
+    files: [docs/<client>/plan.md, docs/<client>/shots/index.md]
+    if_unavailable: Write each document by hand from the scenarios, citing each step's source
+  - when: Every document type written, or a training format left
+    to: ow-documentation
+    verb: /ow-documentation-train
+    say: use ow-documentation-train on docs/<client>/
+    files: [docs/<client>/plan.md, docs/<client>/guides/<role>.md]
+    if_unavailable: Build the training from the guides by hand
+  - when: Every training format written
+    to: ow-documentation
+    verb: /ow-documentation-export
+    say: use ow-documentation-export on docs/<client>/
+    files: [docs/<client>/plan.md, docs/<client>/docs.yaml]
+    if_unavailable: Give client copies, each document without its header and internal section
+  - when: Exported
+    to: ow-documentation
+    verb: /ow-documentation-delivered
+    say: use ow-documentation-delivered on docs/<client>/
+    files: [docs/<client>/deliveries.yaml]
+    if_unavailable: Keep a dated note of the day the documents reached the client
+  - when: Delivered; a session, a check-in or the close due
+    to: ow-documentation
+    verb: /ow-documentation-rollout
+    say: use ow-documentation-rollout on docs/<client>/
+    files: [docs/<client>/plan.md, docs/<client>/delivered.md]
+    if_unavailable: Plan the groups and record each session by role and id by hand
+  # The build: the documentation line's invoice (amendment B4), and a further group as a change order (O11).
+  - when: Delivered, the line not yet requested in ledger.md
+    to: ow-build
+    verb: /ow-build-invoice
+    say: use ow-build to invoice the documentation line
+    files:
+      - { path: docs/<client>/delivered.md, fields: [the delivery date] }
+    if_unavailable: Invoice the documentation line once, by hand, from delivered.md
+  - when: A further group beyond groups × 15
+    to: ow-build
+    verb: /ow-build-change
+    say: use ow-build to price a change for builds/<client>/
+    files: []
+    if_unavailable: Price the further group by hand from your price book; sign it before the session
+  # The handoff (planned: ow-handoff design H3, §5, §6, §9) and care (planned: ow-care design §1).
+  - when: Delivered
+    to: ow-handoff
+    verb: /ow-handoff-notes
+    say: use ow-handoff-notes on handoffs/<client>/
+    files:
+      - { path: docs/<client>/runbook.md, fields: [OP-nn ids and titles] }
+      - { path: docs/<client>/delivered.md, fields: [the delivery date] }
+      - { path: docs/<client>/docs.yaml, fields: [planned_delivery, capture_profile] }
+      - { path: docs/<client>/deliveries.yaml, fields: [the handover path used, its files] }
+      - { path: docs/<client>/secrets-seen.log, fields: [kind, role, source, session] }
+    if_unavailable: The runbook's OP-nn entries and the handover stand on their own
+  - when: The line declined at -start
+    to: ow-handoff
+    verb: /ow-handoff-package
+    say: use ow-handoff-package on handoffs/<client>/
+    files: []
+    if_unavailable: The floor stays in every build; write the operator notes by hand
+  - when: A problem during documentation or training; hourly help after the close
+    to: ow-handoff
+    verb: /ow-handoff-fix
+    say: use ow-handoff-fix on handoffs/<client>/
+    files:
+      - { path: docs/<client>/adoption.md, fields: [open gaps by role] }
+    if_unavailable: Log it as a covered fix by hand, against the agreed checks
+  - when: Rollout closed, care chosen
+    to: ow-care
+    verb: /ow-care-request
+    say: use ow-care-request on care/<client>/
+    files:
+      - { path: docs/<client>/adoption.md, fields: [summary, open gaps by role] }
+      - { path: docs/<client>/runbook.md, fields: [OP-nn ids] }
+    if_unavailable: The adoption summary and the runbook stand on their own
+  - when: No sign-off yet
+    to: ow-uat
+    verb: /ow-uat-signoff
+    say: use ow-uat-signoff
+    files: []
+    if_unavailable: Finish acceptance testing first; the documents describe the accepted build
+  # Documents to their destinations (work leaving the family: handoffs.yaml `docs`).
+  - when: Exported, with no connector for a destination
+    destination: docs
+    files: [docs/<client>/export/<type>/<file>.pdf, <repo>/docs/client-handbook/<file>.md]
+    if_unavailable: Deliver the files in export/ to the client's chosen location

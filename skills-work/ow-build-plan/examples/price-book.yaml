@@ -1,0 +1,104 @@
+# opchain-work/price-book.yaml: INVENTED EXAMPLE. Every number is a placeholder.
+#
+# Copy this file to opchain-work/price-book.yaml and replace every number with
+# your own. Round placeholders (1000, 2000, ...) are used on purpose, so a copy
+# that was never edited is easy to spot. ow-build-plan reads this file and never
+# edits it; the structure is in references/price-book-schema.md. Your real
+# prices belong in your own workspace only, never in a shared or public file.
+ow_artefact: ow-build-plan/price-book
+schema: 1
+written_by: user (created from the ow-build-plan example)
+workstream: none
+subject: none
+created: 2026-10-15
+clock: user-stated
+origin: user
+
+currency: USD
+
+care_onboarding:            # a care takeover's onboarding review (quote --quick --onboarding); INVENTED placeholders
+  sizes: { S: 1000, M: 2000, L: 3000 }
+  size_by_systems: { S: "1 system, no integrations", M: "2 systems or 1 integration", L: "3+ systems or 2+ integrations" }
+  payment: on_signature     # or on_delivery
+
+build_plan_fees:            # the Build Plan itself, per tier
+  one_system: 1000
+  two_systems: 2000
+  three_plus_or_mvp: 3000
+
+build_plan_weeks: { one_system: 1, two_systems: 2, three_plus_or_mvp: 2 }
+
+build_plan_schedule:        # business days from the start date to each deadline, per tier (placeholders)
+  one_system: { collection_business_days: 2, delivery_business_days: 5 }
+  two_systems: { collection_business_days: 4, delivery_business_days: 10 }
+  three_plus_or_mvp: { collection_business_days: 4, delivery_business_days: 10 }
+
+units:
+  - id: integration
+    label: Connect two systems for one workflow
+    price: 1000
+    includes: [error handling and alerts, run logs, acceptance tests, operator notes]
+  - id: workflow-step-exceptions
+    label: An exception path that needs a person
+    price: 1000
+  - id: report
+    label: A report or dashboard view
+    price: 1000
+  - id: screen
+    label: One screen or form
+    price: 1000
+  - id: roles-auth
+    label: Sign-in and roles
+    price: 1000
+  - id: data-migration-source
+    label: Move data in from one source
+    price: 1000
+  - id: feasibility-test
+    label: A time-boxed feasibility test on your own examples
+    price: 1000
+    feasibility: true          # the unit a feasibility quote is priced from
+  - id: tool-s
+    label: Internal tool or portal, small
+    price: 1000
+    size: S
+    includes: [error handling and alerts, run logs, acceptance tests, operator notes]
+  - id: tool-m
+    label: Internal tool or portal, medium
+    price: 2000
+    size: M
+    includes: [error handling and alerts, run logs, acceptance tests, operator notes]
+  - id: tool-l
+    label: Internal tool or portal, large
+    price: 3000
+    size: L
+    includes: [error handling and alerts, run logs, acceptance tests, operator notes]
+  - id: data-protection-review
+    label: Extra handling for sensitive or regulated data
+    price: 1000
+
+modifiers:
+  - id: data-messy
+    when: data_condition is messy
+    multiply: 1.5
+  - id: data-sensitive
+    when: regulated or sensitive data
+    add_unit: data-protection-review
+
+uat:                        # required on every quote; keyed by the build's size letter
+  sizes:
+    S: { price: 1000, tester_roles: 1, sessions: 2, fix_rounds: 1, fix_business_days: 3 }
+    M: { price: 2000, tester_roles: 2, sessions: 3, fix_rounds: 2, fix_business_days: 5 }
+    L: { price: 3000, tester_roles: 3, sessions: 3, fix_rounds: 2, fix_business_days: 7 }
+  per_extra_role: 100
+  extension: { per_session_or_round: 100 }    # internal only: client-caused overruns
+
+documentation_training:     # optional line the client can decline; up to 15 people per size price
+  sizes: { S: 1000, M: 2000, L: 3000 }
+  per_extra_group_of_15: 100
+  quote_separately_above: 100                   # people
+
+size_threshold: 10000       # at or above: 40/40/20; below: 50/50
+payment_terms_days: 14
+quote_validity_days: 14
+build_plan_credit_days: 60  # counted from plan delivery
+quick_quote_max_units: 3

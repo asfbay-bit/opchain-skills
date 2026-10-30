@@ -1,0 +1,53 @@
+# builds/<client>/build.yaml: INVENTED EXAMPLE of what /ow-build-start writes
+# (references/build-yaml-schema.md). You do not copy this file: -start writes
+# it from the signed Build Plan and your answers, and -run adds each sprint's
+# result. Every name, date and path here is made up. The builder's name is not
+# here on purpose: it lives only in your handoffs.yaml.
+ow_artefact: ow-build/build
+schema: 1
+written_by: ow-build 1.0.0 (protocol 1)
+workstream: example-client
+subject: plans/example-client/build-request.md
+created: 2026-11-10
+clock: user-stated
+origin: skill
+client: Example Client
+handling: "no"
+plan: plans/example-client/
+quote_mode: build-plan
+signed: 2026-11-09
+update_day: Friday
+first_update: 2026-11-13
+gitignore: added
+sources:
+  git: { repo: ../example-client-app, branch: main }
+  checkpoints: { dir: ../example-client-app/.checkpoints }
+  time: { export: ../time/example-client.csv }
+  notes: true
+builder:
+  mode: opchain
+  repo: ../example-client-app
+  handover: spec written 2026-11-10; plan line printed
+  sprint_plan: { file: sprints/sprint-plan.md, approved: 2026-11-11, approved_by: Example User (user-stated) }
+milestones:
+  - id: M1
+    work_packages: [WP-1, WP-2]
+    checks: [AC-1.1, AC-1.2, AC-2.1]
+    sprints: [1, 2]
+    status: in progress
+  - id: M2
+    work_packages: [WP-3]
+    checks: [AC-3.1, AC-3.2]
+    sprints: [3]
+    status: not started
+map_check: OK
+sprints:
+  - n: 1
+    milestone: M1
+    handed: 2026-11-12
+    result: pass
+    report: sprints/sprint-1/eval-round-2.md
+    checks_passing: [AC-1.1, AC-1.2]
+    blocker: none
+    confirmed_by: Example User
+    recorded: 2026-11-16

@@ -1,0 +1,327 @@
+# ow-build edges (ow- cross-talk contract R15), schema 1.
+# What this skill writes, reads and hands off, as data. The body's "Reads from"
+# and "Hands off to" tables say the same in words; check-skill-contracts reads
+# this file to hold the family to one writer per file and to edges that match
+# on both ends. Paths are relative to opchain-work/, except <repo>/…, the
+# client's project folder that build.yaml names. Format: skills-work/README.md.
+schema: 1
+skill: ow-build
+
+# The verb other skills hand files to ("use ow-build on <path>"): its rules live
+# in the reference named here, which must cover every path below.
+routes:
+  verb: /ow-build
+  reference: references/routing-and-resume.md
+  paths: [plans/<client>/build-request.md, plans/<client>/, uat/<client>/defects/UAT-nn.md, handoffs/<client>/fixes/FIX-nn.md, uat/<client>/signoff.md, uat/<client>/backstop.md, handoffs/<client>/dates.yaml, docs/<client>/delivered.md, builds/<client>/]
+
+writes:
+  # build.yaml and ledger.md are created once by -start; after that each has one writer.
+  - { path: builds/<client>/build.yaml, verb: /ow-build-run, seeded_by: /ow-build-start }
+  - { path: builds/<client>/ledger.md, verb: /ow-build-invoice, modes: [--paid], seeded_by: /ow-build-start }
+  - { path: builds/<client>/updates/<date>.html, verb: /ow-build-update }
+  - { path: builds/<client>/updates/<date>.txt, verb: /ow-build-update }
+  - { path: builds/<client>/updates/<date>-checks.md, verb: /ow-build-update }   # internal: the trace and the self-checks
+  - { path: builds/<client>/margin.md, verb: /ow-build-update }
+  - { path: builds/<client>/demos/M<n>-script.md, verb: /ow-build-demo }
+  - { path: builds/<client>/demos/M<n>-record.md, verb: /ow-build-demo --record }
+  - { path: builds/<client>/demos/M<n>-summary.html, verb: /ow-build-demo --record }
+  - { path: builds/<client>/demos/M<n>-summary.txt, verb: /ow-build-demo --record }
+  # One writer verb in every mode: each mode moves the change order to its next status.
+  - { path: builds/<client>/changes/CO-nn.md, verb: /ow-build-change, modes: [--sent, --agreed, --signed, --declined] }
+  - { path: builds/<client>/changes/CO-nn.html, verb: /ow-build-change }
+  - { path: builds/<client>/changes/CO-nn.txt, verb: /ow-build-change }
+  - { path: builds/<client>/changes/requests.md, verb: /ow-build-change }
+  - { path: builds/<client>/changes/change-inputs-CO-nn.md, verb: /ow-build-change --agreed }
+  - { path: builds/<client>/invoices/INV-request-<trigger>.md, verb: /ow-build-invoice }
+  - { path: builds/<client>/ready-for-uat.md, verb: /ow-build-ready }
+  # The builder's input in the client's project folder: -start writes the five spec/ files once;
+  # a signed change order's checks go to their own file, so every spec/ file has one writer.
+  - { path: <repo>/spec/00-project-overview.md, verb: /ow-build-start }
+  - { path: <repo>/spec/02-architecture.md, verb: /ow-build-start }
+  - { path: <repo>/spec/04-integrations.md, verb: /ow-build-start }
+  - { path: <repo>/spec/06-testing.md, verb: /ow-build-start }
+  - { path: <repo>/spec/scope-and-milestones.md, verb: /ow-build-start }
+  - { path: <repo>/spec/06-testing-change-orders.md, verb: /ow-build-change --signed }
+  - { path: STATUS.md, verb: /ow-build-start, append: true }
+  - { path: STATUS.md, verb: /ow-build-run, append: true }
+  - { path: STATUS.md, verb: /ow-build-update, append: true }
+  - { path: STATUS.md, verb: /ow-build-demo, append: true }
+  - { path: STATUS.md, verb: /ow-build-change, append: true }
+  - { path: STATUS.md, verb: /ow-build-invoice, append: true }
+  - { path: STATUS.md, verb: /ow-build-ready, append: true }
+
+reads:
+  - from: any
+    path: STATUS.md
+    fields: [the protocol's STATUS form]
+    if_absent: "First run: the welcome"
+    if_mismatch: Quote the lines as found; use only the dates and paths you can read
+  - from: ow-start
+    path: profile.md
+    shared: true
+    fields: [name, time_zone, holidays, handling]
+    if_absent: Ask the user's name and time zone; count business days with weekends only and say so
+    if_mismatch: Report the fields found; ask only for the missing ones
+  # The signed Build Plan (ow-build-plan's signed hand-off).
+  - from: ow-build-plan
+    path: plans/<client>/build-request.md
+    fields: [signed, signing_note, the milestones, client dependencies]
+    if_absent: "Refuse -start: the plan is not signed; nothing is reported as started"
+    if_mismatch: Report the sections found; ask the user to confirm the signing date
+  - from: ow-build-plan
+    path: plans/<client>/quote.md
+    fields: [mode, currency, fixed_price, schedule, payments, payment_terms_days, handling, the client part's milestones]
+    if_absent: Refuse -start; ask for the signed quote
+    if_mismatch: Report the keys found; record no payment until the user confirms the amounts
+  - from: ow-build-plan
+    path: plans/<client>/contract-inputs.md
+    fields: [documentation_sku, documentation_price]
+    if_absent: "No documentation line: documentation: none, and no such trigger"
+    if_mismatch: Record no documentation line until the user confirms bought or declined
+  - from: ow-build-plan
+    path: plans/<client>/plan.yaml
+    fields: [handling]
+    if_absent: "A quick quote has none: take handling from the quote's header, else ask"
+    if_mismatch: Ask the handling question again
+  - from: ow-build-plan
+    path: plans/<client>/build-plan.md
+    fields: [Summary, What should change]
+    if_absent: Take the summary from build-request.md and say so
+    if_mismatch: Use the sections that parse; name the rest in spec/00-project-overview.md as missing
+  - from: ow-build-plan
+    path: plans/<client>/scope.md
+    fields: [work packages, out of scope, client dependencies]
+    if_absent: Refuse -start for a full plan; a quick quote reads quick-scope.md instead
+    if_mismatch: Report the sections found; write nothing to spec/ until the user confirms
+  - from: ow-build-plan
+    path: plans/<client>/acceptance.md
+    fields: [AC ids with when, then, how we check, test data, cases, kind]
+    if_absent: "A quick quote reads quick-scope.md; with neither, stop -start"
+    if_mismatch: Report the checks found; stop -start until every check parses
+  - from: ow-build-plan
+    path: plans/<client>/quick-scope.md
+    fields: [in scope, out of scope, acceptance checks]
+    if_absent: "A full plan reads scope.md and acceptance.md; with neither, stop -start"
+    if_mismatch: Report the sections found; stop -start until every check parses
+  - from: ow-build-plan
+    path: plans/<client>/risks.md
+    fields: [risks with owner and mitigation]
+    if_absent: "Write risks: none recorded in spec/scope-and-milestones.md"
+    if_mismatch: Copy the risks that parse; name the rest
+  - from: ow-build-plan
+    path: plans/<client>/map/systems.md
+    fields: [systems]
+    if_absent: Take systems from build-request.md and say so in spec/02-architecture.md
+    if_mismatch: Use the fact lines that parse
+  - from: ow-build-plan
+    path: plans/<client>/map/data.md
+    fields: [data]
+    if_absent: Take data from build-request.md and say so in spec/02-architecture.md
+    if_mismatch: Use the fact lines that parse
+  - from: ow-build-plan
+    path: plans/<client>/map/future.md
+    fields: [future process]
+    if_absent: Take what should change from build-plan.md and say so in spec/02-architecture.md
+    if_mismatch: Use the fact lines that parse
+  # Requests and payment triggers from acceptance testing and the handoff.
+  - from: ow-uat
+    path: uat/<client>/defects/UAT-nn.md
+    fields: [class, extension requested, client cause, the request]
+    if_absent: Ask for the request directly
+    if_mismatch: Quote what was found; ask the user to state the request and its class
+  - from: ow-uat
+    path: uat/<client>/signoff.md
+    fields: [signed or deemed date, request number]
+    if_absent: "The acceptance trigger is not met; say so"
+    if_mismatch: Report what was found; mark no trigger until the user confirms the sign-off date
+  - from: ow-uat
+    path: uat/<client>/backstop.md
+    fields: [backstop date]
+    if_absent: "The backstop has not applied; the delivery half waits for the handoff date"
+    if_mismatch: Report what was found; mark no trigger until the user confirms the date
+  - from: ow-uat
+    path: uat/<client>/uat.yaml
+    fields: [the governing acceptance or delivery definition, dated]
+    if_absent: Apply the payment triggers as the quote states them
+    if_mismatch: Apply the quote's triggers and ask the user which definition governs
+  - from: ow-handoff
+    path: handoffs/<client>/fixes/FIX-nn.md
+    fields: [class, reported, the request, route]
+    if_absent: Ask for the request directly
+    if_mismatch: Quote what was found; ask the user to state the request
+  - from: ow-handoff
+    path: handoffs/<client>/dates.yaml
+    fields: [handoff_date]
+    if_absent: "The handoff date has not come; the delivery half waits for it or the backstop"
+    if_mismatch: Report what was found; mark no trigger until the user confirms the date
+  - from: ow-documentation
+    path: docs/<client>/delivered.md
+    fields: [the delivery date]
+    if_absent: "The documentation trigger is not met; say so"
+    if_mismatch: Report what was found; mark no trigger until the user confirms the delivery date
+  - from: ow-tools
+    path: builds/<client>/demos/M<n>/transcript.md
+    fields: [speaker labels, times]
+    if_absent: Record the demo from the user's notes
+    if_mismatch: "No speaker labels: treat as notes"
+  # The user's own files.
+  - from: user
+    path: price-book.yaml
+    fields: [units, modifiers, uat.extension, documentation_training.per_extra_group_of_15, quick_quote_max_units, currency]
+    if_absent: Price nothing; ask the user to copy ow-build-plan's examples/price-book.yaml and fill it in
+    if_mismatch: List the keys found and missing; price nothing that needs a missing key
+  - from: user
+    path: offers.md
+    fields: [after_handoff.excluded]
+    if_absent: "No request counts as excluded; say so"
+    if_mismatch: Use what parses; ask whether the request is a new build
+  - from: user
+    path: handoffs.yaml
+    fields: [build, change_order, invoice]
+    if_absent: Print the public default
+    if_mismatch: Print the public default and say the entry did not parse
+  - from: user
+    path: brand.yaml
+    fields: [name, colors, footer, logo, logo_alt]
+    if_absent: Neutral styling, and say so
+    if_mismatch: Use the keys that parse; neutral styling for the rest
+  - from: user
+    path: <repo>/sprints/
+    fields: [sprint-plan.md, sprint-N/contract.md, sprint-N/eval-round-M.md verdicts]
+    if_absent: "No builder result: the sprint stays handed, nothing is reported as passing"
+    if_mismatch: Report what was found; record no result until the user confirms it
+  - from: user
+    path: <repo>/.checkpoints/<checkpoint>.checkpoint.json
+    fields: [progress_summary, progress_table, eval_scores, blockers]
+    if_absent: Read the sprint reports only, and say so
+    if_mismatch: Use the protocol fields that parse; read nothing else from the file
+  - from: user
+    path: <time export>
+    fields: [date, hours, milestone]
+    if_absent: "margin.md says no time was recorded"
+    if_mismatch: Use the rows that parse; ask how to assign rows with no milestone
+
+  # Its own earlier files (detail in each phase file).
+  - { from: ow-build, path: builds/<client>/build.yaml, if_absent: "Say the build has not started; offer /ow-build-start", if_mismatch: "Report the keys found; ask before running anything" }
+  - { from: ow-build, path: builds/<client>/ledger.md, if_absent: "Say the build has not started; offer /ow-build-start", if_mismatch: "Report the rows found; raise no invoice request until the user confirms the schedule" }
+  - { from: ow-build, path: builds/<client>/demos/M<n>-script.md, if_absent: "Record the demo against the milestone's checks", if_mismatch: "Use the check rows that parse" }
+  - { from: ow-build, path: builds/<client>/demos/M<n>-record.md, if_absent: "The milestone is not demoed; the working-demo trigger is not met", if_mismatch: "Report what was found; ask the user to confirm the demo" }
+  - { from: ow-build, path: builds/<client>/changes/CO-nn.md, if_absent: "No change order: say so", if_mismatch: "Report the status found; treat the work as not started" }
+  - { from: ow-build, path: builds/<client>/ready-for-uat.md, if_absent: "Say -ready has not run", if_mismatch: "Report the rows found" }
+  - { from: ow-build, path: builds/<client>/updates/<date>-checks.md, if_absent: "First update: ask the next demo date", if_mismatch: "Ask the next demo date again" }
+  - { from: ow-build, path: builds/<client>/margin.md, if_absent: "First update: ask for the internal hour value", if_mismatch: "Ask for the internal hour value again" }
+
+hands_off:
+  - when: Started, booking payment due
+    to: ow-build
+    verb: /ow-build-invoice
+    say: use ow-build to invoice what is due for builds/<client>/
+    files: [builds/<client>/ledger.md, builds/<client>/build.yaml]
+    if_unavailable: ledger.md holds the booking amount; create the invoice by hand from it
+  - when: Started with a builder, or a milestone has sprints left
+    to: ow-build
+    verb: /ow-build-run
+    say: use ow-build to run M<n> for builds/<client>/
+    files: [builds/<client>/build.yaml, builds/<client>/ledger.md]
+    if_unavailable: build.yaml lists each milestone's sprints; say the builder's sprint line yourself
+  - when: Every sprint of a milestone passes
+    to: ow-build
+    verb: /ow-build-demo
+    say: use ow-build to prepare the M<n> demo for builds/<client>/
+    files: [builds/<client>/build.yaml]
+    if_unavailable: Walk through the milestone's acceptance checks from spec/06-testing.md
+  - when: Demo script written
+    to: ow-build
+    verb: /ow-build-demo --record
+    say: use ow-build to record the M<n> demo for builds/<client>/
+    files: [builds/<client>/demos/M<n>-script.md]
+    if_unavailable: Note each check as works, not yet or not shown beside the script
+  - when: Every milestone demoed
+    to: ow-build
+    verb: /ow-build-ready
+    say: use ow-build to mark builds/<client>/ ready for UAT
+    files: [builds/<client>/demos/M<n>-record.md, builds/<client>/build.yaml]
+    if_unavailable: List every acceptance check with its result from the builder's last run
+  - when: Demo recorded
+    to: ow-build
+    verb: /ow-build
+    say: use ow-build on builds/<client>/
+    files: [builds/<client>/demos/M<n>-record.md, builds/<client>/ledger.md, builds/<client>/build.yaml]
+    if_unavailable: The record lists each check's result; the ledger says whether the demo payment is due
+  - when: A request to price, from a demo or the client
+    to: ow-build
+    verb: /ow-build-change
+    say: use ow-build to price a change for builds/<client>/
+    files: [builds/<client>/demos/M<n>-record.md]
+    if_unavailable: Write the request down and price it by hand from your price book
+  - when: Each week
+    to: ow-build
+    verb: /ow-build-update
+    say: use ow-build to write the update for builds/<client>/
+    files: [builds/<client>/build.yaml, builds/<client>/changes/CO-nn.md]
+    if_unavailable: Write the week's update by hand; keep hours out of it
+  - when: Change order written and sent
+    to: ow-build
+    verb: /ow-build-change --agreed
+    say: use ow-build to record the agreement on builds/<client>/changes/CO-nn.md
+    files: [builds/<client>/changes/CO-nn.md]
+    if_unavailable: Keep the client's reply with the change order; it is not a signature
+  - when: Amendment out
+    to: ow-build
+    verb: /ow-build-change --signed
+    say: use ow-build to record the signed amendment on builds/<client>/changes/CO-nn.md
+    files: [builds/<client>/changes/CO-nn.md]
+    if_unavailable: Keep the signed amendment with the change order; the work starts only then
+  - when: Change agreed in principle
+    destination: change_order
+    files: [builds/<client>/changes/change-inputs-CO-nn.md]
+    if_unavailable: Send change-inputs-CO-nn.md to whoever drafts your contracts, as an amendment
+  - when: Payment due
+    destination: invoice
+    files: [builds/<client>/invoices/INV-request-<trigger>.md]
+    if_unavailable: Create this invoice in your invoicing tool
+  - when: Signed scope, a signed change order, an in-scope request or a failed check for the builder
+    destination: build
+    files: [builds/<client>/changes/change-inputs-CO-nn.md, builds/<client>/changes/requests.md, builds/<client>/ready-for-uat.md]
+    if_unavailable: Give build-request.md, or the change, request or check file, to whoever builds it
+  - when: A FIX-nn too big for a change order
+    to: ow-build-plan
+    verb: /ow-build-plan
+    say: use ow-build-plan on handoffs/<client>/fixes/FIX-nn.md
+    files:
+      - { path: handoffs/<client>/fixes/FIX-nn.md, in_place: true }   # OW-06 ruling O2: ow-handoff's file, handed on
+    if_unavailable: Offer a follow-on Build Plan by hand, from the FIX file
+  - when: A UAT-nn too big for a change order (owner decision 2026-10-16)
+    to: ow-build-plan
+    verb: /ow-build-plan
+    say: use ow-build-plan on uat/<client>/defects/UAT-nn.md
+    files:
+      - { path: uat/<client>/defects/UAT-nn.md, in_place: true }   # owner decision OD-1: ow-uat's file, handed on
+    if_unavailable: Offer a follow-on Build Plan by hand, from the UAT file
+  - when: Ready for UAT, every check passing
+    to: ow-uat
+    verb: /ow-uat-plan
+    say: use ow-uat-plan on builds/<client>/ready-for-uat.md   # owner decision 2026-10-16: the verb's name, as the ow-uat design gives it
+    files:
+      - { path: builds/<client>/ready-for-uat.md, fields: [ready, build_label, environment, the builder's run of each check, known issues, test data, milestones demoed] }
+      - { path: builds/<client>/changes/CO-nn.md, fields: [id, kind, status, signed, adds_checks, requests, history] }
+      # Read by ow-uat where they lie (owner decisions O1, O6 and OD-1): ow-build's own two files, and the signed plan handed on.
+      - { path: builds/<client>/changes/requests.md, fields: [the row for a UAT-nn and its result] }
+      - { path: builds/<client>/ledger.md, fields: [the delivery payment's state] }
+      - { path: plans/<client>/scope.md, in_place: true }
+      - { path: plans/<client>/acceptance.md, in_place: true }
+      - { path: plans/<client>/quick-scope.md, in_place: true }
+      - { path: plans/<client>/contract-inputs.md, in_place: true }
+      - { path: plans/<client>/quote.md, in_place: true }
+      - { path: plans/<client>/map/roles.md, in_place: true }
+      - { path: plans/<client>/map/future.md, in_place: true }
+      # Carried on for the documentation after sign-off (ruling O2 of the documentation build, a data edit): ow-documentation reads
+      # them where ow-build left them, through ow-uat's hand-off.
+      - { path: builds/<client>/build.yaml, in_place: true }
+      - { path: <repo>/spec/02-architecture.md, in_place: true }
+      - { path: <repo>/spec/04-integrations.md, in_place: true }
+      - { path: <repo>/spec/scope-and-milestones.md, in_place: true }
+      # Carried on for the handoff after sign-off (OW-06 ruling O2, a data edit): ow-handoff reads them in place.
+      - { path: plans/<client>/map/systems.md, in_place: true }
+      - { path: plans/<client>/evidence.md, in_place: true }
+    if_unavailable: ready-for-uat.md lists every check, the environment and the test data; plan the client's test by hand from it

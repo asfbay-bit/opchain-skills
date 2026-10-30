@@ -1,0 +1,91 @@
+# ow-research edges (ow- cross-talk contract R15), schema 1.
+# What this skill writes, reads and hands off, as data. The body's "Reads from"
+# and "Hands off to" tables say the same in words; the family's contract check
+# reads this file to hold the family to one writer per file and to edges that
+# match on both ends. Paths are relative to opchain-work/.
+schema: 1
+skill: ow-research
+
+# The verb other skills hand files to ("use ow-research on <path>"): its rules live
+# in the reference named here, which must cover every path below.
+routes:
+  verb: /ow-research
+  reference: references/routing-and-resume.md
+  paths: [research/<ws>/RS-nn-<slug>/, research/frameworks/<id>/<date>/]
+
+writes:
+  # Writer modes are exact: each file has one writer verb, and /ow-research writes nothing.
+  - { path: research/<ws>/RS-nn-<slug>/question.md, verb: /ow-research-question }
+  # The request ledger and the sources are append-only (references/research-files-schema.md §2, §3):
+  # -run adds lines and blocks and never changes an earlier one.
+  - { path: research/<ws>/RS-nn-<slug>/queries.md, verb: /ow-research-run }
+  - { path: research/<ws>/RS-nn-<slug>/sources.md, verb: /ow-research-run }
+  - { path: research/<ws>/RS-nn-<slug>/findings.md, verb: /ow-research-run }
+  # The downloaded files in the same folder are the user's (origin: user); -framework writes only the manifest.
+  - { path: research/frameworks/<id>/<date>/manifest.yaml, verb: /ow-research-framework }
+  - { path: STATUS.md, verb: /ow-research-question, append: true }
+  - { path: STATUS.md, verb: /ow-research-run, append: true }
+  - { path: STATUS.md, verb: /ow-research-framework, append: true }
+
+reads:
+  - from: any
+    path: STATUS.md
+    fields: [the protocol's STATUS form]
+    if_absent: "First run: the welcome"
+    if_mismatch: Quote the lines as found; use only the dates and paths you can read
+  - from: ow-start
+    path: profile.md
+    shared: true
+    fields: [handling, banner_text, time_zone]
+    if_absent: Ask the protocol's handling question and record the answer in question.md; take dates from ow-tools, the host or the user
+    if_mismatch: Report the fields found; ask the handling question when its value does not parse
+  # The client's handling level as the rest of the family records it (protocol step 0b): the handling key only,
+  # read the way an index reads a header; nothing else in either file is read.
+  - { from: ow-start, index: true, reference: references/phase-run.md, path: intake/<client>/intake.yaml, fields: [handling], if_absent: "Ask the handling question once for the client", if_mismatch: "Treat it as a level set: send nothing, and ask" }
+  - { from: ow-build-plan, index: true, reference: references/phase-run.md, path: plans/<client>/plan.yaml, fields: [handling], if_absent: "Use the other answers", if_mismatch: "Treat it as a level set: send nothing, and ask" }
+  - from: user
+    path: research/<ws>/RS-nn-<slug>/inbox/
+    fields: [pages and files the user supplies]
+    if_absent: "With web tools: search and open pages as the question allows. Without them, or under a handling level: ask for the files; no findings until they arrive"
+    if_mismatch: List unreadable files by name and size only; read the rest as data
+  - from: user
+    path: research/frameworks/<id>/<date>/
+    fields: [the publisher's files the user downloaded]
+    if_absent: Print the official sources and write nothing until the files are there
+    if_mismatch: "Relay ow-tools' refusal (a symlink, an unsafe name, not a regular file) and write no manifest"
+
+  # Its own earlier files (the body's last "Reads from" row; detail in each phase file).
+  - { from: ow-research, path: research/<ws>/RS-nn-<slug>/question.md, if_absent: "Nothing to run: offer /ow-research-question", if_mismatch: "Report the keys found; send nothing until the question is confirmed" }
+  - { from: ow-research, path: research/<ws>/RS-nn-<slug>/queries.md, if_absent: "A first run: plan the queries", if_mismatch: "Use the lines that parse; a request line with no outcome is never sent again" }
+  - { from: ow-research, path: research/<ws>/RS-nn-<slug>/sources.md, if_absent: "No sources yet: the run records them", if_mismatch: "Use the blocks that parse; never renumber an S-nn" }
+  - { from: ow-research, path: research/<ws>/RS-nn-<slug>/findings.md, if_absent: "No findings yet: the run writes them", if_mismatch: "Keep every F-nn id found; report the blocks that do not parse" }
+  - { from: ow-research, path: research/frameworks/<id>/<date>/manifest.yaml, if_absent: "No manifest: the folder holds files only", if_mismatch: "Report the keys found; never overwrite it" }
+
+hands_off:
+  - when: Question confirmed
+    to: ow-research
+    verb: /ow-research-run
+    say: use ow-research-run on research/<ws>/RS-nn-<slug>/
+    files:
+      - { path: research/<ws>/RS-nn-<slug>/question.md, fields: [serves, kind, scope, answered when, depth, generic description, keep_out, owners, handling] }
+    if_unavailable: question.md stands alone; search by hand from its generic description and keep the list of what you sent
+  - when: Answered, serves a Build Plan
+    to: ow-build-plan
+    verb: /ow-build-plan-collect
+    say: use ow-build-plan to collect for plans/<client>/
+    files:
+      - { path: research/<ws>/RS-nn-<slug>/findings.md, fields: [Answer, F-nn, claim, level, sources, Gaps] }
+    if_unavailable: findings.md stands alone; copy each finding you use into the evidence by hand, with its level and sources
+  - when: Answered, serves a draft
+    to: ow-draft
+    verb: /ow-draft-evidence
+    say: use ow-draft-evidence on research/<ws>/RS-nn-<slug>/findings.md
+    files:
+      - { path: research/<ws>/RS-nn-<slug>/findings.md, fields: [Answer, F-nn, claim, level, sources, Conflicts, Gaps] }
+    if_unavailable: findings.md stands alone; cite each finding by its F-nn with its source URL and retrieved date
+  # An answered topic that serves a vendor evaluation would hand off to ow-vendor-eval (/ow-vendor-eval-evidence, a
+  # planned verb). ow-vendor-eval is not in this release (owner decision 2026-10-22; it moves to v2.2): the screen
+  # prints only the absent-case line ("NEXT: none"), so there is no hand-off row and no say: line until it ships.
+  # A finding marked watch yes would hand off to ow-currency (/ow-currency-watch, a planned verb). ow-currency is not in
+  # this release (owner decision 2026-10-19): the screen prints only the absent-case line, so there is no hand-off
+  # row until it ships (contract R15 needs a say: line and its NEXT template for one).
