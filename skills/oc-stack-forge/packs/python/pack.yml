@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=../_schema.json
+id: python
+displayName: Python
+kind: language
+status: stable
+since: 1.4.0
+testRunner: pytest
+buildCmd: python -m build
+lintCmd: ruff check .
+langRef: language.md
