@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=../_schema.json
+id: netlify
+displayName: Netlify
+kind: deploy-target
+status: stable
+since: 1.4.0
+deployRef: deploy.md
